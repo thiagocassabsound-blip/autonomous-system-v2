@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous System Operational Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+    <div class="glow glow-3"></div>
+
+    <header class="header">
+        <div class="header-left">
+            <div class="status-dot pulsing"></div>
+            <h1>SYSTEM PIPELINE OBSERVER</h1>
+            <span class="badge" style="color: var(--accent-blue)">DRY_RUN_MODE: ACTIVE</span>
+        </div>
+        <div class="header-right">
+            <button class="btn btn-sm"
+                style="border-color:var(--accent-purple); color:var(--accent-purple); margin-right: 10px;"
+                onclick="triggerSystemMaintenance()">SYSTEM MAINTENANCE</button>
+            <span class="auto-update-status" id="update-status">Starting...</span>
+        </div>
+    </header>
+
+    <div class="alert-bar" id="alert-bar"></div>
+
+    <div class="grid-container">
+
+        <!-- SYSTEM HEALTH -->
+        <div class="glass-panel" id="panel-health">
+            <h2>SYSTEM HEALTH</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>Radar Engine</h3>
+                    <div class="metric-value temp-loading" id="health-radar">--</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Product Pipeline</h3>
+                    <div class="metric-value temp-loading" id="health-product">--</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Traffic Acquisition</h3>
+                    <div class="metric-value temp-loading" id="health-traffic">--</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Conversion Engine</h3>
+                    <div class="metric-value temp-loading" id="health-conversion">--</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Financial Output</h3>
+                    <div class="metric-value temp-loading" id="health-revenue">--</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RADAR LAYER -->
+        <div class="glass-panel" id="panel-radar">
+            <div class="flex-title">
+                <h2>RADAR LAYER</h2>
+                <span class="badge" style="color:var(--accent-purple)">Intelligence Gathering</span>
+            </div>
+            <div class="list-container" id="radar-list">
+                <div class="list-item temp-loading">Loading...</div>
+            </div>
+        </div>
+
+        <!-- PRODUCT LAYER -->
+        <div class="glass-panel" id="panel-products">
+            <div class="flex-title">
+                <h2>PRODUCT LAYER</h2>
+                <span class="badge" style="color:var(--accent-blue)">Lifecycle Execution</span>
+            </div>
+            <div class="product-grid" id="products-container">
+                <div class="temp-loading">Loading...</div>
+            </div>
+        </div>
+
+        <!-- LANDING LAYER -->
+        <div class="glass-panel" id="panel-landings">
+            <h2>LANDING LAYER</h2>
+            <div class="list-container" id="landings-list">
+                <div class="list-item temp-loading">Loading...</div>
+            </div>
+        </div>
+
+        <!-- TRAFFIC LAYER -->
+        <div class="glass-panel" id="panel-traffic">
+            <h2>TRAFFIC LAYER</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>Total Visitors</h3>
+                    <div class="metric-value temp-loading" id="metric-visitors">--</div>
+                </div>
+            </div>
+            <div class="chart-placeholder">
+                <div class="bar" style="height: 30%;"></div>
+                <div class="bar" style="height: 50%;"></div>
+                <div class="bar" style="height: 40%;"></div>
+                <div class="bar" style="height: 70%;"></div>
+                <div class="bar" style="height: 60%;"></div>
+                <div class="bar" style="height: 90%;"></div>
+            </div>
+        </div>
+
+        <!-- CONVERSION LAYER -->
+        <div class="glass-panel" id="panel-conversion">
+            <h2>CONVERSION LAYER</h2>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <h3>Conversion Rate</h3>
+                    <div class="metric-value temp-loading" id="metric-conv">--</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Total MRR</h3>
+                    <div class="metric-value text-green temp-loading" id="metric-mrr">--</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- INTELLIGENCE LAYER -->
+        <div class="glass-panel" id="panel-intelligence">
+            <div class="flex-title">
+                <h2>INTELLIGENCE LAYER</h2>
+                <span class="badge">Operational Signals</span>
+            </div>
+            <div class="list-container" id="intelligence-list">
+                <div class="list-item temp-loading">Loading...</div>
+            </div>
+        </div>
+
+        <!-- EVOLUTION LAYER -->
+        <div class="glass-panel" id="panel-evolution">
+            <div class="flex-title">
+                <h2>EVOLUTION LAYER</h2>
+                <span class="badge" style="color:#d946ef">Strategic Memory</span>
+            </div>
+            <div class="list-container" id="evolution-list">
+                <div class="list-item temp-loading">Loading...</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

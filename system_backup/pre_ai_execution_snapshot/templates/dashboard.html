@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autonomous System V2 - Dashboard</title>
+    <style>
+        :root {
+            --bg: #0f1117;
+            --panel: #1a1c23;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --accent: #8b5cf6;
+            --accent-hover: #a78bfa;
+            --border: #2d3748;
+            --healthy: #10b981;
+            --degraded: #f59e0b;
+            --error: #ef4444;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Header (Fixed Control Bar) */
+        .header {
+            position: sticky;
+            top: 0;
+            background: #13151a;
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            color: var(--accent);
+            font-weight: 800;
+            font-size: 1.25rem;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .status-healthy {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--healthy);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-degraded {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--degraded);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .dot-healthy {
+            background: var(--healthy);
+            box-shadow: 0 0 8px var(--healthy);
+        }
+
+        .dot-degraded {
+            background: var(--degraded);
+            box-shadow: 0 0 8px var(--degraded);
+        }
+
+        .dot-error {
+            background: var(--error);
+            box-shadow: 0 0 8px var(--error);
+        }
+
+        .header-middle {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+            color: var(--muted);
+        }
+
+        .meta-item strong {
+            color: var(--text);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        button {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            color: white;
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+        }
+
+        .user-info {
+            font-size: 0.85rem;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Main Layout */
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Sections */
+        .section {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            margin: 0;
+            color: var(--text);
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* Placeholders */
+        .placeholder {
+            padding: 3rem;
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.9rem;
+            font-style: italic;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+            border: 1px dashed var(--border);
+        }
+
+        /* Grids */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+        }
+
+        .card {
+            background: #13151a;
+            border: 1px solid var(--border);
+            padding: 1rem;
+            border-radius: 6px;
+        }
+
+        .card h4 {
+            margin: 0 0 0.5rem 0;
+            color: var(--muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+        }
+
+        .card .value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--text);
+            margin: 0;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        th {
+            text-align: left;
+            padding: 0.5rem;
+            color: var(--muted);
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 0.75rem 0.5rem;
+            border-bottom: 1px solid #222530;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Mode Toggle */
+        .mode-toggle {
+            display: flex;
+            background: #0f1117;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .mode-btn {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.7rem;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+        }
+
+        .mode-btn.active {
+            background: var(--accent);
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 3. HEADER STRUCTURE -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">⚡ Autonomous System</div>
+
+            <div
+                class="status-badge {% if system_status == 'NORMAL' or system_status == 'NORMAL (MOCK)' %}status-healthy{% elif 'CONTEN' in system_status %}status-degraded{% else %}status-error{% endif %}">
+                <div
+                    class="status-dot {% if system_status == 'NORMAL' or system_status == 'NORMAL (MOCK)' %}dot-healthy{% elif 'CONTEN' in system_status %}dot-degraded{% else %}dot-error{% endif %}">
+                </div>
+                {{ system_status }}
+            </div>
+        </div>
+
+        <div class="header-middle">
+            <div class="meta-item">Env: <strong>LOCAL</strong></div>
+            <div class="meta-item">Last Update: <strong>{{ last_updated }}</strong></div>
+
+            <div class="mode-toggle">
+                <form action="/dashboard/api/toggle_mock" method="POST" style="margin:0;display:inline;">
+                    <button type="submit" class="mode-btn {% if mode == 'REAL' %}active{% endif %}">REAL</button>
+                </form>
+                <form action="/dashboard/api/toggle_mock" method="POST" style="margin:0;display:inline;">
+                    <button type="submit" class="mode-btn {% if mode == 'MOCK' %}active{% endif %}">MOCK</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <button class="btn-primary"
+                onclick="alert('Action requires Orhcestrator manual execution capability (Awaiting engine connection)')">Launch
+                Radar</button>
+            <form action="/dashboard/api/refresh" method="POST" style="margin:0;display:inline;">
+                <button type="submit">Refresh Data</button>
+            </form>
+            <div class="user-info">
+                👤 {{ username }}
+                <a href="/logout" style="color:var(--error);text-decoration:none;margin-left:0.5rem;">[Logout]</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- 2. DASHBOARD SCROLL STRUCTURE -->
+    <div class="container">
+
+        <!-- ERROR HANDLING UI (Integration Failures) -->
+        {% if error_alerts %}
+        <div class="grid" style="grid-template-columns: 1fr;">
+            {% for alert in error_alerts %}
+            <div class="card" style="border-color: var(--error); border-left: 4px solid var(--error);">
+                <h4 style="color: var(--error);">Integration Alert</h4>
+                <div class="value" style="font-size: 1rem;">{{ alert }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- 1. System Status -->
+        <section class="section">
+            <div class="section-header">
+                <h3 class="section-title">System Status Overview</h3>
+            </div>
+            <div class="grid">
+                <div class="card">
+                    <h4>Total Evaluations</h4>
+                    <p class="value">{{ total_evals }}</p>
+                </div>
+                <div class="card">
+                    <h4>Active Product Drafts</h4>
+                    <p class="value">{{ total_drafts }}</p>
+                </div>
+                <div class="card">
+                    <h4>LLM Budget Today</h4>
+                    <p class="value">{{ budget_calls }} / {{ budget_max }}</p>
+                    <div style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;">Cost: ${{ budget_cost }}</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Radar Panel -->
+        <section class="section">
+            <div class="section-header">
+                <h3 class="section-title">Radar Pipeline</h3>
+            </div>
+            {% if evals %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Product ID</th>
+                        <th>ICE Level</th>
+                        <th>Final Score</th>
+                        <th>Recommended</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ev in evals %}
+                    <tr>
+                        <td>{{ ev.timestamp[:19] }}</td>
+                        <td>{{ ev.product_id }}</td>
+                        <td><span
+                                class="status-badge {% if ev.ice == 'ALTO' %}status-healthy{% else %}status-degraded{% endif %}"
+                                style="display:inline-flex;">{{ ev.ice }}</span></td>
+                        <td>{{ "%.2f"|format(ev.score_final) if ev.score_final else '—' }}</td>
+                        <td>{{ '✅ YES' if ev.recommended else '❌ NO' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="placeholder">Awaiting engine connection — No radar data available</div>
+            {% endif %}
+        </section>
+
+        <!-- 3. Draft Pipeline -->
+        <section class="section">
+            <div class="section-header">
+                <h3 class="section-title">Draft Pipeline (Product Lifecycle)</h3>
+            </div>
+            {% if products %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Created At</th>
+                        <th>Product ID</th>
+                        <th>State</th>
+                        <th>Baseline Version</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pd in products %}
+                    <tr>
+                        <td>{{ pd.created_at[:19] }}</td>
+                        <td>{{ pd.product_id }}</td>
+                        <td style="color:var(--accent);">{{ pd.state }}</td>
+                        <td>v{{ pd.baseline_version }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="placeholder">Awaiting engine connection — No drafts available</div>
+            {% endif %}
+        </section>
+
+        <!-- 4. Product Portfolio -->
+        <section class="section">
+            <div class="section-header">
+                <h3 class="section-title">Product Portfolio (Active)</h3>
+            </div>
+            <div class="placeholder">Awaiting engine connection — No live products</div>
+        </section>
+
+        <!-- 5. Product Analytics -->
+        <section class="section">
+            <div class="section-header">
+                <h3 class="section-title">Product Analytics</h3>
+            </div>
+            <div class="placeholder">Awaiting engine connection — Analytics not yet wired</div>
+        </section>
+
+        <!-- 6. Finance & Resources -->
+        <section class="section">
+            <div class="section-header">
+                <h3 class="section-title">Finance & Resources</h3>
+            </div>
+            <div class="placeholder">Awaiting engine connection — Finance Engine disconnected</div>
+        </section>
+
+        <!-- 7. Alerts -->
+        <section class="section">
+            <div class="section-header">
+                <h3 class="section-title">System Alerts</h3>
+            </div>
+            <div class="placeholder">No active alerts at this time.</div>
+        </section>
+
+        <!-- 8. AI Decisions -->
+        <section class="section">
+            <div class="section-header">
+                <h3 class="section-title">Recent AI Decisions</h3>
+            </div>
+            <div class="placeholder">Awaiting engine connection — Decision log unavailable</div>
+        </section>
+
+        <!-- 9. System Telemetry -->
+        <section class="section">
+            <div class="section-header">
+                <h3 class="section-title">System Telemetry</h3>
+            </div>
+            <div class="placeholder">Awaiting engine connection — Real-time telemetry offline</div>
+        </section>
+
+    </div>
+</body>
+
+</html>

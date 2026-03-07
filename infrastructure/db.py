@@ -1,0 +1,154 @@
+"""
+infrastructure/db.py — Persistence Backends
+- FilePersistence: generic JSON state file
+- EventLogPersistence: append-only event ledger (events.json)
+- SnapshotPersistence: append-only snapshot store (snapshots.json)
+"""
+import json
+import os
+import tempfile
+from infrastructure.logger import get_logger
+
+logger = get_logger("Persistence")
+
+# ======================================================================
+# Generic state file
+# ======================================================================
+
+class FilePersistence:
+    """Simple JSON key-value store. Used by StateManager."""
+
+    def __init__(self, filepath: str = "state.json"):
+        self.filepath = filepath
+
+    def load(self) -> dict:
+        if not os.path.exists(self.filepath):
+            logger.info(f"No state file at '{self.filepath}'. Starting fresh.")
+            return {}
+        try:
+            with open(self.filepath, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            logger.info(f"State loaded from '{self.filepath}' ({len(data)} keys).")
+            return data if isinstance(data, dict) else {}
+        except (json.JSONDecodeError, IOError) as e:
+            logger.error(f"Failed to load state: {e}. Starting fresh.")
+            return {}
+
+    def save(self, data_dict: dict) -> None:
+        """Atomic save using temporary file + rename."""
+        try:
+            fd, temp_path = tempfile.mkstemp(dir=os.path.dirname(self.filepath), prefix=".tmp_state_")
+            with os.fdopen(fd, 'w', encoding="utf-8") as f:
+                json.dump(data_dict, f, indent=2, ensure_ascii=False)
+            os.replace(temp_path, self.filepath)
+        except IOError as e:
+            logger.error(f"Failed to save state: {e}")
+            if 'temp_path' in locals() and os.path.exists(temp_path):
+                os.remove(temp_path)
+
+
+# ======================================================================
+# Append-only event ledger
+# ======================================================================
+
+class EventLogPersistence:
+    """
+    Append-only event log persisted to events.json.
+    load() returns the full list.
+    append() adds one event; never updates or deletes existing entries.
+    """
+
+    def __init__(self, filepath: str = "events.json"):
+        self.filepath = filepath
+
+    def load(self) -> list:
+        if not os.path.exists(self.filepath):
+            return []
+        try:
+            with open(self.filepath, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            return data if isinstance(data, list) else []
+        except (json.JSONDecodeError, IOError) as e:
+            logger.error(f"Failed to load event log: {e}.")
+            return []
+
+    def append(self, event: dict) -> None:
+        """Append one event to the ledger using atomic save."""
+        events = self.load()
+        events.append(event)
+        try:
+            fd, temp_path = tempfile.mkstemp(dir=os.path.dirname(self.filepath), prefix=".tmp_events_")
+            with os.fdopen(fd, 'w', encoding="utf-8") as f:
+                json.dump(events, f, indent=2, ensure_ascii=False)
+            os.replace(temp_path, self.filepath)
+        except IOError as e:
+            logger.error(f"Failed to persist event: {e}")
+            if 'temp_path' in locals() and os.path.exists(temp_path):
+                os.remove(temp_path)
+
+
+# ======================================================================
+# Append-only snapshot store
+# ======================================================================
+
+class SnapshotPersistence:
+    """
+    Append-only snapshot store persisted to snapshots.json.
+    Snapshots are never deleted or updated.
+    """
+
+    def __init__(self, filepath: str = "snapshots.json"):
+        self.filepath = filepath
+
+    def load(self) -> list:
+        if not os.path.exists(self.filepath):
+            return []
+        try:
+            with open(self.filepath, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            return data if isinstance(data, list) else []
+        except (json.JSONDecodeError, IOError) as e:
+            logger.error(f"Failed to load snapshots: {e}.")
+            return []
+
+    def append(self, snapshot: dict) -> None:
+        """Atomic append to snapshot store."""
+        snapshots = self.load()
+        snapshots.append(snapshot)
+        try:
+            fd, temp_path = tempfile.mkstemp(dir=os.path.dirname(self.filepath), prefix=".tmp_snaps_")
+            with os.fdopen(fd, 'w', encoding="utf-8") as f:
+                json.dump(snapshots, f, indent=2, ensure_ascii=False)
+            os.replace(temp_path, self.filepath)
+        except IOError as e:
+            logger.error(f"Failed to persist snapshot: {e}")
+            if 'temp_path' in locals() and os.path.exists(temp_path):
+                os.remove(temp_path)
+
+
+# ======================================================================
+# Generic JSON persistence (for StateMachine, VersionManager, etc.)
+# ======================================================================
+
+class JsonFilePersistence:
+    """Generic load/save for arbitrary JSON data (dict or list)."""
+
+    def __init__(self, filepath: str):
+        self.filepath = filepath
+
+    def load(self):
+        if not os.path.exists(self.filepath):
+            return {}
+        try:
+            with open(self.filepath, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, IOError) as e:
+            logger.error(f"Failed to load '{self.filepath}': {e}.")
+            return {}
+
+    def save(self, data) -> None:
+        try:
+            with open(self.filepath, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2, ensure_ascii=False)
+        except IOError as e:
+            logger.error(f"Failed to save '{self.filepath}': {e}")

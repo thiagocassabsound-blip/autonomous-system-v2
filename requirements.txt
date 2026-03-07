@@ -1,0 +1,9 @@
+requests
+beautifulsoup4
+feedparser
+openai
+python-dotenv
+flask
+flask-cors
+stripe
+resend

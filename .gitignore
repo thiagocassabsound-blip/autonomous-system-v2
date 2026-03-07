@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+vwen/
+env/
+.env
+
+# Data and Logs
+*.json
+!commercial_state.json
+*.jsonl
+*.log
+.tmp_*
+
+# OS
+.DS_Store
+Thumbs.db
