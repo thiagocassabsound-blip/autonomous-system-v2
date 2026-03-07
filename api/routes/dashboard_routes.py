@@ -44,8 +44,9 @@ def logout():
 @dashboard_bp.route("/dashboard", methods=["GET"])
 def dashboard():
     """Simplified system dashboard entry point."""
-    return "FastoolHub System Dashboard", 200
-
+    if not session.get("authenticated"):
+        return redirect(url_for("dashboard_routes.login"))
+        
     # Read from cache
     data = dashboard_state.get_data()
     mode = dashboard_state.mode
@@ -75,8 +76,7 @@ def dashboard():
     budget_max = budget.get("max_calls_per_day", 100)
     budget_cost = f"{budget.get('cost_today_usd', 0.0):.2f}"
 
-    # Verify if integrations are "unavailable" based on global state tracking, 
-    # but for Foundation Block we just use placeholder if global state fails
+    # Verify if integrations are "unavailable" based on global state tracking
     error_alerts = []
     if system_status == "UNKNOWN":
         error_alerts.append("State Engine unavailable - Persistence read failed.")
@@ -94,8 +94,64 @@ def dashboard():
         budget_cost=budget_cost,
         evals=latest_evals,
         products=latest_drafts,
-        error_alerts=error_alerts
+        error_alerts=error_alerts,
+        section="overview"
     )
+
+@dashboard_bp.route("/dashboard/radar", methods=["GET"])
+def dashboard_radar():
+    if not session.get("authenticated"):
+        return redirect(url_for("dashboard_routes.login"))
+    data = dashboard_state.get_data()
+    return render_template("dashboard.html", section="radar", evals=data.get("evaluations", []), **_get_base_context(data))
+
+@dashboard_bp.route("/dashboard/opportunities", methods=["GET"])
+def dashboard_opportunities():
+    if not session.get("authenticated"):
+        return redirect(url_for("dashboard_routes.login"))
+    data = dashboard_state.get_data()
+    # Filter for recommendations
+    recommendations = [e for e in data.get("evaluations", []) if e.get("recommended")]
+    return render_template("dashboard.html", section="opportunities", recommendations=recommendations, **_get_base_context(data))
+
+@dashboard_bp.route("/dashboard/products", methods=["GET"])
+def dashboard_products():
+    if not session.get("authenticated"):
+        return redirect(url_for("dashboard_routes.login"))
+    data = dashboard_state.get_data()
+    return render_template("dashboard.html", section="products", products=list(data.get("products", {}).values()), **_get_base_context(data))
+
+@dashboard_bp.route("/dashboard/analytics", methods=["GET"])
+def dashboard_analytics():
+    if not session.get("authenticated"):
+        return redirect(url_for("dashboard_routes.login"))
+    data = dashboard_state.get_data()
+    return render_template("dashboard.html", section="analytics", **_get_base_context(data))
+
+@dashboard_bp.route("/dashboard/settings", methods=["GET"])
+def dashboard_settings():
+    if not session.get("authenticated"):
+        return redirect(url_for("dashboard_routes.login"))
+    data = dashboard_state.get_data()
+    return render_template("dashboard.html", section="settings", **_get_base_context(data))
+
+def _get_base_context(data):
+    """Helper to get base template context."""
+    last_ts = data.get("last_updated", 0)
+    last_updated_str = datetime.fromtimestamp(last_ts, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    budget = data.get("budget", {})
+    return {
+        "system_status": data.get("global_state", {}).get("state", "UNKNOWN"),
+        "mode": dashboard_state.mode,
+        "username": session.get("username"),
+        "last_updated": last_updated_str,
+        "total_evals": len(data.get("evaluations", [])),
+        "total_drafts": len(data.get("products", {})),
+        "budget_calls": budget.get("calls_today", 0),
+        "budget_max": budget.get("max_calls_per_day", 100),
+        "budget_cost": f"{budget.get('cost_today_usd', 0.0):.2f}",
+        "error_alerts": []
+    }
 
 
 @dashboard_bp.route("/dashboard/api/refresh", methods=["POST"])

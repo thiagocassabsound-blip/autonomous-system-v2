@@ -86,7 +86,10 @@ class DashboardStateManager:
             with open("radar_evaluations.json", "r", encoding="utf-8") as f:
                 for line in f:
                     if line.strip():
-                        evals.append(json.loads(line))
+                        try:
+                            evals.append(json.loads(line))
+                        except json.JSONDecodeError:
+                            continue
             self._cache["evaluations"] = evals
         except Exception:
             self._cache["evaluations"] = []
@@ -98,14 +101,16 @@ class DashboardStateManager:
             self._cache["products"] = {}
 
         try:
-            # Safe import of optional llm budget guard
-            from infra.llm import llm_budget_guard
-            self._cache["budget"] = llm_budget_guard.get_status()
-        except ImportError:
+            with open("finance_state.json", "r", encoding="utf-8") as f:
+                self._cache["budget"] = json.load(f)
+        except Exception:
             self._cache["budget"] = {}
-        except Exception as e:
-            logger.warning(f"[DashboardState] Could not load LLM budget: {e}")
-            self._cache["budget"] = {}
+            
+        try:
+            with open("commercial_state.json", "r", encoding="utf-8") as f:
+                self._cache["commercial"] = json.load(f)
+        except Exception:
+            self._cache["commercial"] = {}
 
     def _load_mock_data(self):
         """Loads simulated data for safe UI testing."""

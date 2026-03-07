@@ -72,6 +72,10 @@ class EventLogPersistence:
             logger.error(f"Failed to load event log: {e}.")
             return []
 
+    def load_all(self) -> list:
+        """Alias for load() to support StrategicOpportunityEngine V2."""
+        return self.load()
+
     def append(self, event: dict) -> None:
         """Append one event to the ledger using atomic save."""
         events = self.load()

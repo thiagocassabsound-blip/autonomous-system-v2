@@ -70,6 +70,12 @@ def bootstrap():
     ple = ProductLifeEngine(persistence=plc_pers)
     orchestrator.register_service("product_life", ple)
 
+    # 3.4 Strategic Opportunity Engine (Radar)
+    from core.strategic_opportunity_engine import StrategicOpportunityEngine
+    radar_pers = EventLogPersistence("radar_evaluations.json")
+    soe = StrategicOpportunityEngine(orchestrator=orchestrator, persistence=radar_pers)
+    orchestrator.register_service("strategic_radar", soe)
+
     # 4. Activate autonomous system (Orchestrator + Scheduler + Radar + Landing)
     start_system_runner(orchestrator, bus)
 

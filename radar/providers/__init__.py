@@ -6,12 +6,6 @@ Exports all data providers. Each provider:
   - Implements BaseProvider.collect(query_spec) -> dict
   - Returns raw signal data only (no scoring, no state writes)
   - Is pluggable into RadarEngine.providers list
-
-Providers:
-  SocialPainProvider      — social frustration signals (Reddit API + simulation)
-  SearchIntentProvider    — commercial keyword intent signals
-  TrendProvider           — temporal growth trend signals
-  CommercialSignalProvider— competitor/price/WTP signals
 """
 from radar.providers.base_provider import BaseProvider
 from radar.providers.social_pain import collect_social_pain_signals
@@ -26,6 +20,7 @@ from radar.providers.hackernews_provider import HackerNewsProvider
 from radar.providers.search_intent_provider_real import RealSearchIntentProvider
 from radar.providers.google_trends_provider import GoogleTrendsProvider
 from radar.providers.product_hunt_provider import ProductHuntProvider
+from radar.providers.synthetic_audit_provider import SyntheticAuditProvider
 
 # Adapter class to wrap the functional social_pain API as a BaseProvider subclass
 from radar.models.radar_query_spec import RadarQuerySpec as _RadarQuerySpec
@@ -69,4 +64,5 @@ __all__ = [
     "RealSearchIntentProvider",
     "GoogleTrendsProvider",
     "ProductHuntProvider",
+    "SyntheticAuditProvider",
 ]

@@ -59,6 +59,7 @@ from radar.providers import (
     RealSearchIntentProvider,
     GoogleTrendsProvider,
     ProductHuntProvider,
+    SyntheticAuditProvider,
 )
 
 logger = get_logger("RadarEngine")
@@ -247,6 +248,7 @@ class RadarEngine:
             RealSearchIntentProvider(),
             GoogleTrendsProvider(),
             ProductHuntProvider(),
+            SyntheticAuditProvider(),
         ]
 
         logger.info(
