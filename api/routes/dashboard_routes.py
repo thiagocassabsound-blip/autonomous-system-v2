@@ -49,6 +49,18 @@ def logout():
     return redirect(url_for("dashboard_routes.login"))
 
 
+@dashboard_bp.route("/debug/env")
+def debug_env():
+    # Only return specific auth keys for security
+    keys = ["ADMIN_USERNAME", "ADMIN_PASSWORD", "DASHBOARD_USER", "DASHBOARD_PASSWORD"]
+    info = {k: os.getenv(k) for k in keys}
+    # Obfuscate password but show length and first/last char
+    for k in info:
+        if "PASSWORD" in k and info[k]:
+            val = info[k]
+            info[k] = f"{val[0]}...{val[-1]} (len={len(val)})"
+    return info
+
 @dashboard_bp.route("/dashboard", methods=["GET"])
 def dashboard():
     """Simplified system dashboard entry point."""
