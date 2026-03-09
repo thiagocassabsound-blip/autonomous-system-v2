@@ -16,17 +16,25 @@ dashboard_bp = Blueprint(
     template_folder="../../templates"
 )
 
-# Basic static credentials for foundational block
-DASHBOARD_USER = os.getenv("DASHBOARD_USER", "admin")
-DASHBOARD_PASSWORD = os.getenv("DASHBOARD_PASSWORD", "admin")
-
 @dashboard_bp.route("/login", methods=["GET", "POST"])
 def login():
+    # Read fresh from environment inside handler for robustness
+    # Priority: ADMIN_USERNAME (NEW) -> DASHBOARD_USER (LEGACY) -> admin (FALLBACK)
+    env_user = os.getenv("ADMIN_USERNAME") or os.getenv("DASHBOARD_USER", "admin")
+    env_pass = os.getenv("ADMIN_PASSWORD") or os.getenv("DASHBOARD_PASSWORD", "admin")
+    
+    # Normalize comparison values
+    target_user = env_user.strip().lower()
+    target_pass = env_pass.strip()
+
     if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
+        username = (request.form.get("username") or "").strip().lower()
+        password = (request.form.get("password") or "").strip()
         
-        if username == DASHBOARD_USER and password == DASHBOARD_PASSWORD:
+        user_match = (username == target_user)
+        pass_match = (password == target_pass)
+
+        if user_match and pass_match:
             session["authenticated"] = True
             session["username"] = username
             return redirect(url_for("dashboard_routes.dashboard"))
