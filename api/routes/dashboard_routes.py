@@ -172,6 +172,15 @@ def refresh_data():
     return redirect(url_for("dashboard_routes.dashboard"))
 
 
+@dashboard_bp.route("/dashboard/api/toggle_mock", methods=["POST"])
+def toggle_mock():
+    """Toggles MOCK/REAL mode."""
+    if not session.get("authenticated"):
+        return redirect(url_for("dashboard_routes.login"))
+        
+    dashboard_state.toggle_mode()
+    return redirect(url_for("dashboard_routes.dashboard"))
+
 @dashboard_bp.route("/dashboard/api/debug_paths", methods=["GET"])
 def debug_paths():
     """Debug routine to inspect server-side paths and file existence."""
