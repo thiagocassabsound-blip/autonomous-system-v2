@@ -6,7 +6,7 @@ Read-only. UI + session + state access only.
 No engine modifications. No state writes.
 """
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash
 from core.dashboard_state_manager import dashboard_state
 
@@ -67,7 +67,7 @@ def dashboard():
     budget = data.get("budget", {})
     last_ts_float = data.get("last_updated", 0)
     
-    last_updated_str = datetime.fromtimestamp(last_ts_float, tz=timezone.utc).strftime("%d/%m/%Y %H:%M:%S UTC")
+    last_updated_str = datetime.fromtimestamp(last_ts_float, tz=timezone.utc).astimezone(timezone(timedelta(hours=-3))).strftime("%d/%m/%Y %H:%M:%S BRT")
 
     # Latest 10 eval history (descending)
     latest_evals = list(reversed(evals[-10:]))
@@ -102,6 +102,9 @@ def dashboard():
         budget_cost=budget_cost,
         evals=latest_evals,
         products=latest_drafts,
+        analytics=data.get("analytics", {}),
+        ai_decisions=data.get("ai_decisions", []),
+        budget_data=budget,
         error_alerts=error_alerts,
         section="overview"
     )

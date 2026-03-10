@@ -173,15 +173,24 @@ class DashboardStateManager:
         """Provides high-quality synthetic data aligned with dashboard keys."""
         iso_now = datetime.now(timezone.utc).isoformat()
         self._cache["global_state"] = {"state": "NORMAL (MOCK)"}
+        
+        # 1. Finance & Budget Mock
         self._cache["budget"] = {
             "calls_today": 42,
             "max_calls_per_day": 100,
-            "cost_today_usd": 1.25
+            "cost_today_usd": 1.25,
+            "stripe_balance_usd": 450.00,
+            "google_ads_spend_30d": 120.50,
+            "financial_threshold": 50.00
         }
+        
+        # 2. Product Pipeline Mock
         self._cache["products"] = {
             "mock_id_1": {"product_id": "mock-prod-1", "state": "ATIVO", "baseline_version": 1, "created_at": iso_now},
             "mock_id_2": {"product_id": "mock-prod-2", "state": "RASCUNHO", "baseline_version": 2, "created_at": iso_now}
         }
+        
+        # 3. Radar Evaluations Mock
         self._cache["evaluations"] = [
             {
                 "timestamp": iso_now, 
@@ -198,6 +207,22 @@ class DashboardStateManager:
                 "recommended": False
             }
         ]
+        
+        # 4. Analytics Mock
+        self._cache["analytics"] = {
+            "conversion_avg": 3.4,
+            "retention_avg": 68.2,
+            "revenue_30d": 1240.50,
+            "leads_total": 85
+        }
+        
+        # 5. AI Decisions Mock
+        self._cache["ai_decisions"] = [
+            {"timestamp": iso_now, "decision": "Ajuste de lance automático no Google Ads para o produto mock-prod-1.", "impact": "ALTO"},
+            {"timestamp": iso_now, "decision": "Nova variação de copy gerada para o pipeline de rascunhos.", "impact": "MÉDIO"},
+            {"timestamp": iso_now, "decision": "Pausa preventiva do radar devido a flutuação de custo de API.", "impact": "BAIXO"}
+        ]
+        
         self._cache["commercial"] = {"total_leads": 12, "last_synced": iso_now}
 
     def _log_history(self):

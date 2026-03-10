@@ -377,9 +377,7 @@
             </div>
             {% endfor %}
         </div>
-        {% endif %}
-
-        <!-- 1. System Status -->
+           <!-- 1. System Status -->
         <section class="section">
             <div class="section-header">
                 <h3 class="section-title">Resumo do Status do Sistema</h3>
@@ -396,16 +394,23 @@
                 <div class="card">
                     <h4>Orçamento LLM Hoje</h4>
                     <p class="value">{{ budget_calls }} / {{ budget_max }}</p>
-                    <div style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;">Custo: ${{ budget_cost }}
-                    </div>
+                    <div style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;">Custo: ${{ budget_cost }}</div>
                 </div>
+                {% if budget_data.financial_threshold %}
+                <div class="card" style="border-left: 4px solid var(--accent);">
+                    <h4>Limiar Financeiro</h4>
+                    <p class="value">${{ budget_data.financial_threshold }}</p>
+                    <div style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;">Status: Seguro</div>
+                </div>
+                {% endif %}
             </div>
         </section>
 
         <!-- 2. Radar Panel -->
         <section class="section">
             <div class="section-header">
-                <h3 class="section-title">Pipeline do Radar</h3>
+                <h3 class="section-title">Pipeline do Radar (Resumo Executivo)</h3>
+                <a href="/dashboard/radar" style="font-size:0.75rem; color:var(--accent); text-decoration:none;">Ver Histórico Completo →</a>
             </div>
             {% if evals %}
             <table>
@@ -421,7 +426,7 @@
                 <tbody>
                     {% for ev in evals %}
                     <tr>
-                        <td>{{ (ev.timestamp or "")[:19] }}</td>
+                        <td>{{ (ev.timestamp or "")[11:19] }}</td>
                         <td>{{ ev.product_id }}</td>
                         <td><span
                                 class="status-badge {% if ev.ice == 'ALTO' %}status-healthy{% else %}status-degraded{% endif %}"
@@ -455,7 +460,7 @@
                 <tbody>
                     {% for pd in products %}
                     <tr>
-                        <td>{{ (pd.created_at or "")[:19] }}</td>
+                        <td>{{ (pd.created_at or "")[11:19] }}</td>
                         <td>{{ pd.product_id }}</td>
                         <td style="color:var(--accent);">{{ pd.state }}</td>
                         <td>v{{ pd.baseline_version }}</td>
@@ -473,7 +478,21 @@
             <div class="section-header">
                 <h3 class="section-title">Portfólio de Produtos (Ativos)</h3>
             </div>
+            {% if products %}
+            <div class="grid">
+                {% for pd in products if pd.state == 'ACTIVE' or pd.state == 'ATIVO' %}
+                <div class="card">
+                    <h4>{{ pd.product_id }}</h4>
+                    <p class="value">v{{ pd.baseline_version }}</p>
+                    <p style="font-size:0.75rem; color:var(--healthy);">OPERACIONAL</p>
+                </div>
+                {% else %}
+                <div class="placeholder" style="width:100%;">Aguardando conexão do motor — Nenhum produto ao vivo</div>
+                {% endfor %}
+            </div>
+            {% else %}
             <div class="placeholder">Aguardando conexão do motor — Nenhum produto ao vivo</div>
+            {% endif %}
         </section>
 
         <!-- 5. Product Analytics -->
@@ -481,7 +500,24 @@
             <div class="section-header">
                 <h3 class="section-title">Análise de Produtos</h3>
             </div>
+            {% if analytics %}
+            <div class="grid">
+                <div class="card">
+                    <h4>Conversão (Média)</h4>
+                    <p class="value">{{ analytics.conversion_avg }}%</p>
+                </div>
+                <div class="card">
+                    <h4>Retenção (Média)</h4>
+                    <p class="value">{{ analytics.retention_avg }}%</p>
+                </div>
+                <div class="card">
+                    <h4>Receita (30d)</h4>
+                    <p class="value">${{ "%.2f"|format(analytics.revenue_30d) }}</p>
+                </div>
+            </div>
+            {% else %}
             <div class="placeholder">Aguardando conexão do motor — Análise ainda não conectada</div>
+            {% endif %}
         </section>
 
         <!-- 6. Finance & Resources -->
@@ -489,7 +525,24 @@
             <div class="section-header">
                 <h3 class="section-title">Finanças e Recursos</h3>
             </div>
+            {% if budget_data.stripe_balance_usd or budget_data.google_ads_spend_30d %}
+            <div class="grid">
+                <div class="card">
+                    <h4>Saldo Stripe</h4>
+                    <p class="value">${{ "%.2f"|format(budget_data.stripe_balance_usd or 0) }}</p>
+                </div>
+                <div class="card">
+                    <h4>Gasto Ads (30d)</h4>
+                    <p class="value">${{ "%.2f"|format(budget_data.google_ads_spend_30d or 0) }}</p>
+                </div>
+                <div class="card">
+                    <h4>Custo LLM</h4>
+                    <p class="value">${{ budget_cost }}</p>
+                </div>
+            </div>
+            {% else %}
             <div class="placeholder">Aguardando conexão do motor — Motor de Finanças desconectado</div>
+            {% endif %}
         </section>
 
         <!-- 7. Alerts -->
@@ -497,7 +550,18 @@
             <div class="section-header">
                 <h3 class="section-title">Alertas do Sistema</h3>
             </div>
+            {% if error_alerts %}
+            <div class="grid" style="grid-template-columns: 1fr;">
+                {% for alert in error_alerts %}
+                <div class="card" style="border-color: var(--error); border-left: 4px solid var(--error);">
+                    <h4 style="color: var(--error);">ALERTA</h4>
+                    <div class="value" style="font-size: 1rem;">{{ alert }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
             <div class="placeholder">Nenhum alerta ativo no momento.</div>
+            {% endif %}
         </section>
 
         <!-- 8. AI Decisions -->
@@ -505,7 +569,28 @@
             <div class="section-header">
                 <h3 class="section-title">Decisões Recentes de IA</h3>
             </div>
+            {% if ai_decisions %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Horário</th>
+                        <th>Decisão Operacional</th>
+                        <th>Impacto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for dec in ai_decisions %}
+                    <tr>
+                        <td>{{ (dec.timestamp or "")[11:19] }}</td>
+                        <td>{{ dec.decision }}</td>
+                        <td><span class="status-badge {% if dec.impact == 'ALTO' %}status-healthy{% else %}status-degraded{% endif %}">{{ dec.impact }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
             <div class="placeholder">Aguardando conexão do motor — Log de decisões indisponível</div>
+            {% endif %}
         </section>
 
         </section>
@@ -531,7 +616,7 @@
                 <tbody>
                     {% for ev in evals %}
                     <tr>
-                        <td>{{ (ev.timestamp or "")[:19] }}</td>
+                        <td>{{ (ev.timestamp or "")[11:19] }}</td>
                         <td>{{ ev.product_id }}</td>
                         <td><span
                                 class="status-badge {% if ev.ice == 'ALTO' %}status-healthy{% else %}status-degraded{% endif %}"
@@ -622,22 +707,24 @@
             <div class="section-header">
                 <h3 class="section-title">Métricas e Análises do Sistema</h3>
             </div>
+            {% if analytics %}
             <div class="grid">
                 <div class="card">
                     <h4>Conversão (Média)</h4>
-                    <p class="value">0.0%</p>
+                    <p class="value">{{ analytics.conversion_avg }}%</p>
                 </div>
                 <div class="card">
                     <h4>Retenção (Média)</h4>
-                    <p class="value">0.0%</p>
+                    <p class="value">{{ analytics.retention_avg }}%</p>
                 </div>
                 <div class="card">
                     <h4>Receita (30d)</h4>
-                    <p class="value">$0.00</p>
+                    <p class="value">${{ "%.2f"|format(analytics.revenue_30d) }}</p>
                 </div>
             </div>
-            <div class="placeholder" style="margin-top:1rem;">Visualização de análise avançada pendente de conexão com
-                MetricEngine.</div>
+            {% else %}
+            <div class="placeholder">Aguardando conexão do motor — Análise ainda não conectada</div>
+            {% endif %}
         </section>
         {% endif %}
 
@@ -651,16 +738,16 @@
                 <div class="card">
                     <h4>Modo Autônomo</h4>
                     <p style="font-size:0.8rem; color:var(--muted);">Nível de execução autônoma global.</p>
-                    <select disabled
+                    <select
                         style="background:#0f1117; color:white; border:1px solid var(--border); padding:0.5rem; width:100%;">
                         <option>Totalmente Autônomo (Padrão V2)</option>
-                        <option>Humano no loop</option>
+                        <option>Humano no loop (Aguardando Configuração)</option>
                     </select>
                 </div>
                 <div class="card">
                     <h4>Limiar de Contenção Financeira</h4>
                     <p style="font-size:0.8rem; color:var(--muted);">Parada de emergência no saldo restante.</p>
-                    <input type="text" value="$50.00" disabled
+                    <input type="text" value="${{ budget_data.financial_threshold if budget_data.financial_threshold else '50.00' }}"
                         style="background:#0f1117; color:white; border:1px solid var(--border); padding:0.5rem; width:100%;">
                 </div>
             </form>
