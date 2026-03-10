@@ -29,11 +29,11 @@ def bootstrap():
     # 1. Infrastructure
     from core.event_bus import EventBus
     from core.state_manager import StateManager
-    from infrastructure.db import JsonFilePersistence, EventLogPersistence
+    from infrastructure.db import JsonFilePersistence, EventLogPersistence, JSONLPersistence
     from core.orchestrator import Orchestrator
     
     # Use persistent ledger as requested in Phase A5
-    ledger_pers = EventLogPersistence("ledger.jsonl")
+    ledger_pers = JSONLPersistence("ledger.jsonl")
     bus = EventBus(ledger_pers)
     state_pers = JsonFilePersistence("state.json")
     state_manager = StateManager(state_pers)
@@ -72,7 +72,7 @@ def bootstrap():
 
     # 3.4 Strategic Opportunity Engine (Radar)
     from core.strategic_opportunity_engine import StrategicOpportunityEngine
-    radar_pers = EventLogPersistence("radar_evaluations.json")
+    radar_pers = JSONLPersistence("radar_evaluations.json")
     soe = StrategicOpportunityEngine(orchestrator=orchestrator, persistence=radar_pers)
     orchestrator.register_service("strategic_radar", soe)
 

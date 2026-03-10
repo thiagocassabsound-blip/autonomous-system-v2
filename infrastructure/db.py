@@ -90,6 +90,10 @@ class EventLogPersistence:
             if 'temp_path' in locals() and os.path.exists(temp_path):
                 os.remove(temp_path)
 
+    def append_record(self, record: dict) -> None:
+        """Alias for append() to support StrategicOpportunityEngine V2."""
+        self.append(record)
+
 
 # ======================================================================
 # Append-only snapshot store
@@ -129,6 +133,10 @@ class SnapshotPersistence:
             if 'temp_path' in locals() and os.path.exists(temp_path):
                 os.remove(temp_path)
 
+    def append_record(self, record: dict) -> None:
+        """Alias for append() to support StrategicOpportunityEngine V2."""
+        self.append(record)
+
 
 # ======================================================================
 # Generic JSON persistence (for StateMachine, VersionManager, etc.)
@@ -156,3 +164,52 @@ class JsonFilePersistence:
                 json.dump(data, f, indent=2, ensure_ascii=False)
         except IOError as e:
             logger.error(f"Failed to save '{self.filepath}': {e}")
+
+# ======================================================================
+# Newline-delimited JSON persistence (JSONL)
+# ======================================================================
+
+class JSONLPersistence:
+    """
+    Persistence backend for .jsonl files (one JSON object per line).
+    Extremely efficient for large logs as it uses append-only writes.
+    """
+
+    def __init__(self, filepath: str):
+        self.filepath = filepath
+
+    def load(self) -> list:
+        """Read all lines and parse as JSON objects."""
+        if not os.path.exists(self.filepath):
+            return []
+        items = []
+        try:
+            with open(self.filepath, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line:
+                        try:
+                            items.append(json.loads(line))
+                        except json.JSONDecodeError as e:
+                            logger.error(f"Error parsing line in {self.filepath}: {e}")
+            return items
+        except IOError as e:
+            logger.error(f"Failed to load JSONL from '{self.filepath}': {e}")
+            return []
+
+    def load_all(self) -> list:
+        """Alias for load()."""
+        return self.load()
+
+    def append_record(self, item: dict) -> None:
+        """Append one JSON object as a new line."""
+        try:
+            # Atomic-ish append: directly to file
+            with open(self.filepath, "a", encoding="utf-8") as f:
+                f.write(json.dumps(item, ensure_ascii=False) + "\n")
+        except IOError as e:
+            logger.error(f"Failed to append to JSONL '{self.filepath}': {e}")
+
+    def append(self, item: dict) -> None:
+        """Alias for append_record()."""
+        self.append_record(item)

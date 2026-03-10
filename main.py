@@ -15,6 +15,7 @@ from infrastructure.logger import get_logger
 from infrastructure.db import (
     FilePersistence, EventLogPersistence,
     SnapshotPersistence, JsonFilePersistence,
+    JSONLPersistence,
 )
 from infrastructure.finance_persistence import (
     FinanceStatePersistence, FinanceProjectionsPersistence, GlobalStatePersistence,
@@ -103,7 +104,7 @@ def _run_core_system(orchestrator, mode="normal", interval=2.0):
     feedback_engine     = FeedbackIncentiveEngine(orchestrator, fb_persistence)
     orchestrator.register_service("feedback", feedback_engine)
 
-    radar_persistence = EventLogPersistence("radar_evaluations.json")
+    radar_persistence = JSONLPersistence("radar_evaluations.json")
     radar_engine_v2   = StrategicOpportunityEngine(
         orchestrator=orchestrator,
         persistence=radar_persistence,
