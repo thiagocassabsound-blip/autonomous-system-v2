@@ -48,6 +48,8 @@ class DashboardStateManager:
             "products":     {},
             "budget":       {},
             "commercial":   {},
+            "analytics":    {},
+            "ai_decisions": [],
             "last_updated": 0.0
         }
 

@@ -512,7 +512,7 @@
                 </div>
                 <div class="card">
                     <h4>Receita (30d)</h4>
-                    <p class="value">${{ "%.2f"|format(analytics.revenue_30d) }}</p>
+                    <p class="value">${{ "%.2f"|format(analytics.revenue_30d or 0.0) }}</p>
                 </div>
             </div>
             {% else %}
@@ -593,7 +593,6 @@
             {% endif %}
         </section>
 
-        </section>
         {% endif %}
 
         <!-- RADAR SECTION -->
@@ -719,7 +718,7 @@
                 </div>
                 <div class="card">
                     <h4>Receita (30d)</h4>
-                    <p class="value">${{ "%.2f"|format(analytics.revenue_30d) }}</p>
+                    <p class="value">${{ "%.2f"|format(analytics.revenue_30d or 0.0) }}</p>
                 </div>
             </div>
             {% else %}

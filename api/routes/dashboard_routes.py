@@ -149,7 +149,7 @@ def dashboard_settings():
 def _get_base_context(data):
     """Helper to get base template context."""
     last_ts = data.get("last_updated", 0)
-    last_updated_str = datetime.fromtimestamp(last_ts, tz=timezone.utc).strftime("%d/%m/%Y %H:%M:%S UTC")
+    last_updated_str = datetime.fromtimestamp(last_ts, tz=timezone.utc).astimezone(timezone(timedelta(hours=-3))).strftime("%d/%m/%Y %H:%M:%S BRT")
     
     # Defensive data extraction
     budget = data.get("budget", {})
