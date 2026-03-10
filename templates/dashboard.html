@@ -313,7 +313,7 @@
     <!-- 3. HEADER STRUCTURE -->
     <header class="header">
         <div class="header-left">
-            <div class="logo">⚡ Autonomous System</div>
+            <div class="logo">⚡ Sistema Autônomo</div>
 
             <div
                 class="status-badge {% if system_status == 'NORMAL' or system_status == 'NORMAL (MOCK)' %}status-healthy{% elif 'CONTEN' in system_status %}status-degraded{% else %}status-error{% endif %}">
@@ -325,8 +325,8 @@
         </div>
 
         <div class="header-middle">
-            <div class="meta-item">Env: <strong>LOCAL</strong></div>
-            <div class="meta-item">Last Update: <strong>{{ last_updated }}</strong></div>
+            <div class="meta-item">Ambiente: <strong>LOCAL</strong></div>
+            <div class="meta-item">Última Atualização: <strong>{{ last_updated }}</strong></div>
 
             <div class="mode-toggle">
                 <form action="/dashboard/api/toggle_mock" method="POST" style="margin:0;display:inline;">
@@ -340,26 +340,26 @@
 
         <div class="header-right">
             <button class="btn-primary"
-                onclick="alert('Action requires Orhcestrator manual execution capability (Awaiting engine connection)')">Launch
+                onclick="alert('Ação requer capacidade de execução manual do Orchestrator (Aguardando conexão do motor)')">Iniciar
                 Radar</button>
             <form action="/dashboard/api/refresh" method="POST" style="margin:0;display:inline;">
-                <button type="submit">Refresh Data</button>
+                <button type="submit">Atualizar Dados</button>
             </form>
             <div class="user-info">
                 👤 {{ username }}
-                <a href="/logout" style="color:var(--error);text-decoration:none;margin-left:0.5rem;">[Logout]</a>
+                <a href="/logout" style="color:var(--error);text-decoration:none;margin-left:0.5rem;">[Sair]</a>
             </div>
         </div>
     </header>
 
     <nav class="nav-bar">
-        <a href="/dashboard" class="nav-item {% if section == 'overview' %}active{% endif %}">Overview</a>
+        <a href="/dashboard" class="nav-item {% if section == 'overview' %}active{% endif %}">Visão Geral</a>
         <a href="/dashboard/radar" class="nav-item {% if section == 'radar' %}active{% endif %}">Radar</a>
         <a href="/dashboard/opportunities"
-            class="nav-item {% if section == 'opportunities' %}active{% endif %}">Opportunities</a>
-        <a href="/dashboard/products" class="nav-item {% if section == 'products' %}active{% endif %}">Products</a>
-        <a href="/dashboard/analytics" class="nav-item {% if section == 'analytics' %}active{% endif %}">Analytics</a>
-        <a href="/dashboard/settings" class="nav-item {% if section == 'settings' %}active{% endif %}">Settings</a>
+            class="nav-item {% if section == 'opportunities' %}active{% endif %}">Oportunidades</a>
+        <a href="/dashboard/products" class="nav-item {% if section == 'products' %}active{% endif %}">Produtos</a>
+        <a href="/dashboard/analytics" class="nav-item {% if section == 'analytics' %}active{% endif %}">Análise</a>
+        <a href="/dashboard/settings" class="nav-item {% if section == 'settings' %}active{% endif %}">Configurações</a>
     </nav>
 
     <!-- 2. DASHBOARD SCROLL STRUCTURE -->
@@ -372,7 +372,7 @@
         <div class="grid" style="grid-template-columns: 1fr;">
             {% for alert in error_alerts %}
             <div class="card" style="border-color: var(--error); border-left: 4px solid var(--error);">
-                <h4 style="color: var(--error);">Integration Alert</h4>
+                <h4 style="color: var(--error);">Alerta de Integração</h4>
                 <div class="value" style="font-size: 1rem;">{{ alert }}</div>
             </div>
             {% endfor %}
@@ -382,21 +382,22 @@
         <!-- 1. System Status -->
         <section class="section">
             <div class="section-header">
-                <h3 class="section-title">System Status Overview</h3>
+                <h3 class="section-title">Resumo do Status do Sistema</h3>
             </div>
             <div class="grid">
                 <div class="card">
-                    <h4>Total Evaluations</h4>
+                    <h4>Total de Avaliações</h4>
                     <p class="value">{{ total_evals }}</p>
                 </div>
                 <div class="card">
-                    <h4>Active Product Drafts</h4>
+                    <h4>Rascunhos Ativos</h4>
                     <p class="value">{{ total_drafts }}</p>
                 </div>
                 <div class="card">
-                    <h4>LLM Budget Today</h4>
+                    <h4>Orçamento LLM Hoje</h4>
                     <p class="value">{{ budget_calls }} / {{ budget_max }}</p>
-                    <div style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;">Cost: ${{ budget_cost }}</div>
+                    <div style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;">Custo: ${{ budget_cost }}
+                    </div>
                 </div>
             </div>
         </section>
@@ -404,17 +405,17 @@
         <!-- 2. Radar Panel -->
         <section class="section">
             <div class="section-header">
-                <h3 class="section-title">Radar Pipeline</h3>
+                <h3 class="section-title">Pipeline do Radar</h3>
             </div>
             {% if evals %}
             <table>
                 <thead>
                     <tr>
-                        <th>Timestamp</th>
-                        <th>Product ID</th>
-                        <th>ICE Level</th>
-                        <th>Final Score</th>
-                        <th>Recommended</th>
+                        <th>Horário</th>
+                        <th>ID do Produto</th>
+                        <th>Nível ICE</th>
+                        <th>Score Final</th>
+                        <th>Recomendado</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -426,29 +427,29 @@
                                 class="status-badge {% if ev.ice == 'ALTO' %}status-healthy{% else %}status-degraded{% endif %}"
                                 style="display:inline-flex;">{{ ev.ice }}</span></td>
                         <td>{{ "%.2f"|format(ev.score_final) if ev.score_final else '—' }}</td>
-                        <td>{{ '✅ YES' if ev.recommended else '❌ NO' }}</td>
+                        <td>{{ '✅ SIM' if ev.recommended else '❌ NÃO' }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
             {% else %}
-            <div class="placeholder">Awaiting engine connection — No radar data available</div>
+            <div class="placeholder">Aguardando conexão do motor — Nenhum dado de radar disponível</div>
             {% endif %}
         </section>
 
         <!-- 3. Draft Pipeline -->
         <section class="section">
             <div class="section-header">
-                <h3 class="section-title">Draft Pipeline (Product Lifecycle)</h3>
+                <h3 class="section-title">Fila de Rascunhos (Ciclo de Vida)</h3>
             </div>
             {% if products %}
             <table>
                 <thead>
                     <tr>
-                        <th>Created At</th>
-                        <th>Product ID</th>
-                        <th>State</th>
-                        <th>Baseline Version</th>
+                        <th>Criado em</th>
+                        <th>ID do Produto</th>
+                        <th>Estado</th>
+                        <th>Versão Base</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -463,48 +464,48 @@
                 </tbody>
             </table>
             {% else %}
-            <div class="placeholder">Awaiting engine connection — No drafts available</div>
+            <div class="placeholder">Aguardando conexão do motor — Nenhum rascunho disponível</div>
             {% endif %}
         </section>
 
         <!-- 4. Product Portfolio -->
         <section class="section">
             <div class="section-header">
-                <h3 class="section-title">Product Portfolio (Active)</h3>
+                <h3 class="section-title">Portfólio de Produtos (Ativos)</h3>
             </div>
-            <div class="placeholder">Awaiting engine connection — No live products</div>
+            <div class="placeholder">Aguardando conexão do motor — Nenhum produto ao vivo</div>
         </section>
 
         <!-- 5. Product Analytics -->
         <section class="section">
             <div class="section-header">
-                <h3 class="section-title">Product Analytics</h3>
+                <h3 class="section-title">Análise de Produtos</h3>
             </div>
-            <div class="placeholder">Awaiting engine connection — Analytics not yet wired</div>
+            <div class="placeholder">Aguardando conexão do motor — Análise ainda não conectada</div>
         </section>
 
         <!-- 6. Finance & Resources -->
         <section class="section">
             <div class="section-header">
-                <h3 class="section-title">Finance & Resources</h3>
+                <h3 class="section-title">Finanças e Recursos</h3>
             </div>
-            <div class="placeholder">Awaiting engine connection — Finance Engine disconnected</div>
+            <div class="placeholder">Aguardando conexão do motor — Motor de Finanças desconectado</div>
         </section>
 
         <!-- 7. Alerts -->
         <section class="section">
             <div class="section-header">
-                <h3 class="section-title">System Alerts</h3>
+                <h3 class="section-title">Alertas do Sistema</h3>
             </div>
-            <div class="placeholder">No active alerts at this time.</div>
+            <div class="placeholder">Nenhum alerta ativo no momento.</div>
         </section>
 
         <!-- 8. AI Decisions -->
         <section class="section">
             <div class="section-header">
-                <h3 class="section-title">Recent AI Decisions</h3>
+                <h3 class="section-title">Decisões Recentes de IA</h3>
             </div>
-            <div class="placeholder">Awaiting engine connection — Decision log unavailable</div>
+            <div class="placeholder">Aguardando conexão do motor — Log de decisões indisponível</div>
         </section>
 
         </section>
@@ -514,17 +515,17 @@
         {% if section == 'radar' %}
         <section class="section">
             <div class="section-header">
-                <h3 class="section-title">Full Radar History</h3>
+                <h3 class="section-title">Histórico Completo do Radar</h3>
             </div>
             {% if evals %}
             <table>
                 <thead>
                     <tr>
-                        <th>Timestamp</th>
-                        <th>Product ID</th>
-                        <th>ICE Level</th>
-                        <th>Final Score</th>
-                        <th>Recommended</th>
+                        <th>Horário</th>
+                        <th>ID do Produto</th>
+                        <th>Nível ICE</th>
+                        <th>Score Final</th>
+                        <th>Recomendado</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -536,13 +537,13 @@
                                 class="status-badge {% if ev.ice == 'ALTO' %}status-healthy{% else %}status-degraded{% endif %}"
                                 style="display:inline-flex;">{{ ev.ice }}</span></td>
                         <td>{{ "%.2f"|format(ev.score_final) if ev.score_final else '—' }}</td>
-                        <td>{{ '✅ YES' if ev.recommended else '❌ NO' }}</td>
+                        <td>{{ '✅ SIM' if ev.recommended else '❌ NÃO' }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
             {% else %}
-            <div class="placeholder">No radar data available in history.</div>
+            <div class="placeholder">Nenhum dado de radar disponível no histórico.</div>
             {% endif %}
         </section>
         {% endif %}
@@ -551,16 +552,16 @@
         {% if section == 'opportunities' %}
         <section class="section">
             <div class="section-header">
-                <h3 class="section-title">Strategic Opportunities</h3>
+                <h3 class="section-title">Oportunidades Estratégicas</h3>
             </div>
             {% if recommendations %}
             <table>
                 <thead>
                     <tr>
-                        <th>Date</th>
-                        <th>Opp ID</th>
-                        <th>Confidence</th>
-                        <th>Type</th>
+                        <th>Data</th>
+                        <th>ID da Opp</th>
+                        <th>Confiança</th>
+                        <th>Tipo</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -570,14 +571,14 @@
                         <td>{{ (rec.timestamp or "")[:10] }}</td>
                         <td>{{ rec.product_id }}</td>
                         <td>{{ "%.1f%%"|format(rec.score_final if rec.score_final else 0) }}</td>
-                        <td>Expansion</td>
-                        <td style="color:var(--healthy);">RECOMMENDED</td>
+                        <td>Expansão</td>
+                        <td style="color:var(--healthy);">RECOMENDADO</td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
             {% else %}
-            <div class="placeholder">No recommended opportunities at this time.</div>
+            <div class="placeholder">Nenhuma oportunidade recomendada no momento.</div>
             {% endif %}
         </section>
         {% endif %}
@@ -586,16 +587,16 @@
         {% if section == 'products' %}
         <section class="section">
             <div class="section-header">
-                <h3 class="section-title">All Products</h3>
+                <h3 class="section-title">Todos os Produtos</h3>
             </div>
             {% if products %}
             <table>
                 <thead>
                     <tr>
-                        <th>Product ID</th>
-                        <th>State</th>
-                        <th>Version</th>
-                        <th>Created At</th>
+                        <th>ID do Produto</th>
+                        <th>Estado</th>
+                        <th>Versão</th>
+                        <th>Criado em</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -610,7 +611,7 @@
                 </tbody>
             </table>
             {% else %}
-            <div class="placeholder">No products found in lifecycle storage.</div>
+            <div class="placeholder">Nenhum produto encontrado no armazenamento.</div>
             {% endif %}
         </section>
         {% endif %}
@@ -619,23 +620,23 @@
         {% if section == 'analytics' %}
         <section class="section">
             <div class="section-header">
-                <h3 class="section-title">System Metrics & Analytics</h3>
+                <h3 class="section-title">Métricas e Análises do Sistema</h3>
             </div>
             <div class="grid">
                 <div class="card">
-                    <h4>Conversion (Avg)</h4>
+                    <h4>Conversão (Média)</h4>
                     <p class="value">0.0%</p>
                 </div>
                 <div class="card">
-                    <h4>Retention (Avg)</h4>
+                    <h4>Retenção (Média)</h4>
                     <p class="value">0.0%</p>
                 </div>
                 <div class="card">
-                    <h4>Revenue (30d)</h4>
+                    <h4>Receita (30d)</h4>
                     <p class="value">$0.00</p>
                 </div>
             </div>
-            <div class="placeholder" style="margin-top:1rem;">Advanced analytics visualization pending connection to
+            <div class="placeholder" style="margin-top:1rem;">Visualização de análise avançada pendente de conexão com
                 MetricEngine.</div>
         </section>
         {% endif %}
@@ -644,21 +645,21 @@
         {% if section == 'settings' %}
         <section class="section">
             <div class="section-header">
-                <h3 class="section-title">System Settings</h3>
+                <h3 class="section-title">Configurações do Sistema</h3>
             </div>
             <form style="display:flex; flex-direction:column; gap:1rem; max-width:400px;">
                 <div class="card">
-                    <h4>Autonomous Mode</h4>
-                    <p style="font-size:0.8rem; color:var(--muted);">Global autonomous execution level.</p>
+                    <h4>Modo Autônomo</h4>
+                    <p style="font-size:0.8rem; color:var(--muted);">Nível de execução autônoma global.</p>
                     <select disabled
                         style="background:#0f1117; color:white; border:1px solid var(--border); padding:0.5rem; width:100%;">
-                        <option>Full Autonomous (V2 Standard)</option>
-                        <option>Human-in-the-loop</option>
+                        <option>Totalmente Autônomo (Padrão V2)</option>
+                        <option>Humano no loop</option>
                     </select>
                 </div>
                 <div class="card">
-                    <h4>Financial Containment Threshold</h4>
-                    <p style="font-size:0.8rem; color:var(--muted);">Emergency stop at remaining balance.</p>
+                    <h4>Limiar de Contenção Financeira</h4>
+                    <p style="font-size:0.8rem; color:var(--muted);">Parada de emergência no saldo restante.</p>
                     <input type="text" value="$50.00" disabled
                         style="background:#0f1117; color:white; border:1px solid var(--border); padding:0.5rem; width:100%;">
                 </div>

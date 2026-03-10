@@ -39,7 +39,7 @@ def login():
             session["username"] = username
             return redirect(url_for("dashboard_routes.dashboard"))
         else:
-            flash("Invalid credentials. Access denied.")
+            flash("Credenciais inválidas. Acesso negado.")
             
     return render_template("login.html")
 
@@ -67,7 +67,7 @@ def dashboard():
     budget = data.get("budget", {})
     last_ts_float = data.get("last_updated", 0)
     
-    last_updated_str = datetime.fromtimestamp(last_ts_float, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    last_updated_str = datetime.fromtimestamp(last_ts_float, tz=timezone.utc).strftime("%d/%m/%Y %H:%M:%S UTC")
 
     # Latest 10 eval history (descending)
     latest_evals = list(reversed(evals[-10:]))
@@ -87,7 +87,7 @@ def dashboard():
     # Verify if integrations are "unavailable" based on global state tracking
     error_alerts = []
     if system_status == "UNKNOWN":
-        error_alerts.append("State Engine unavailable - Persistence read failed.")
+        error_alerts.append("Motor de Estado indisponível - Falha na leitura de persistência.")
 
     return render_template(
         "dashboard.html",
@@ -146,7 +146,7 @@ def dashboard_settings():
 def _get_base_context(data):
     """Helper to get base template context."""
     last_ts = data.get("last_updated", 0)
-    last_updated_str = datetime.fromtimestamp(last_ts, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    last_updated_str = datetime.fromtimestamp(last_ts, tz=timezone.utc).strftime("%d/%m/%Y %H:%M:%S UTC")
     
     # Defensive data extraction
     budget = data.get("budget", {})

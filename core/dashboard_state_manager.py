@@ -179,8 +179,8 @@ class DashboardStateManager:
             "cost_today_usd": 1.25
         }
         self._cache["products"] = {
-            "mock_id_1": {"product_id": "mock-prod-1", "state": "ACTIVE", "baseline_version": 1, "created_at": iso_now},
-            "mock_id_2": {"product_id": "mock-prod-2", "state": "DRAFT", "baseline_version": 2, "created_at": iso_now}
+            "mock_id_1": {"product_id": "mock-prod-1", "state": "ATIVO", "baseline_version": 1, "created_at": iso_now},
+            "mock_id_2": {"product_id": "mock-prod-2", "state": "RASCUNHO", "baseline_version": 2, "created_at": iso_now}
         }
         self._cache["evaluations"] = [
             {
@@ -193,7 +193,7 @@ class DashboardStateManager:
             {
                 "timestamp": iso_now, 
                 "product_id": "mock-prod-2", 
-                "ice": "MEDIO", 
+                "ice": "MÉDIO", 
                 "score_final": 0.45, 
                 "recommended": False
             }
