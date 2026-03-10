@@ -9,6 +9,10 @@ env/
 # Data and Logs
 *.json
 !commercial_state.json
+!global_state.json
+!finance_state.json
+!product_lifecycle_state.json
+!radar_evaluations.json
 *.jsonl
 *.log
 .tmp_*

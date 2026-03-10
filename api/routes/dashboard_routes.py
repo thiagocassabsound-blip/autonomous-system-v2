@@ -168,17 +168,30 @@ def refresh_data():
     if not session.get("authenticated"):
         return redirect(url_for("dashboard_routes.login"))
         
-    dashboard_state.force_refresh()
+    dashboard_state.refresh_cache(force=True)
     return redirect(url_for("dashboard_routes.dashboard"))
 
 
-@dashboard_bp.route("/dashboard/api/toggle_mock", methods=["POST"])
-def toggle_mock():
-    """Toggles MOCK/REAL mode."""
+@dashboard_bp.route("/dashboard/api/debug_paths", methods=["GET"])
+def debug_paths():
+    """Debug routine to inspect server-side paths and file existence."""
     if not session.get("authenticated"):
         return redirect(url_for("dashboard_routes.login"))
-        
-    dashboard_state.toggle_mode()
-    return redirect(url_for("dashboard_routes.dashboard"))
+    
+    from core.dashboard_state_manager import PROJECT_ROOT, PERSISTENCE_DIR
+    import os
+    
+    paths_to_check = dashboard_state.paths
+    existence = {name: os.path.exists(path) for name, path in paths_to_check.items()}
+    
+    debug_info = {
+        "PROJECT_ROOT": PROJECT_ROOT,
+        "PERSISTENCE_DIR": PERSISTENCE_DIR,
+        "cwd": os.getcwd(),
+        "paths": paths_to_check,
+        "existence": existence,
+        "cache_sample": dashboard_state.get_data().get("global_state")
+    }
+    return debug_info
 
 
