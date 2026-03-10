@@ -59,10 +59,17 @@ class DashboardStateManager:
         """Returns the current operational mode (REAL/MOCK)."""
         return self._mode
 
-    def toggle_mode(self) -> str:
-        """Toggles operational mode and forces a cache refresh."""
-        self._mode = "MOCK" if self._mode == "REAL" else "REAL"
-        logger.info(f"[DashboardState] Operational mode toggled to: {self._mode}")
+    def toggle_mode(self, target: str = None) -> str:
+        """
+        Toggles operational mode (or sets to target) and forces a cache refresh.
+        target: Optional "REAL" or "MOCK".
+        """
+        if target in ["REAL", "MOCK"]:
+            self._mode = target
+        else:
+            self._mode = "MOCK" if self._mode == "REAL" else "REAL"
+            
+        logger.info(f"[DashboardState] Operational mode set to: {self._mode}")
         self.refresh_cache(force=True)
         return self._mode
 
@@ -92,7 +99,12 @@ class DashboardStateManager:
             p = self.paths["global_state"]
             if os.path.exists(p):
                 with open(p, "r", encoding="utf-8") as f:
-                    self._cache["global_state"] = json.load(f)
+                    data = json.load(f)
+                    if isinstance(data, dict):
+                        self._cache["global_state"] = data
+                    else:
+                        logger.warning(f"[DashboardState] global_state is not a dict: {type(data)}")
+                        self._cache["global_state"] = {"state": "DEGRADED", "info": "Invalid structure"}
                 logger.info(f"[DashboardState] Loaded global_state: {p}")
             else:
                 self._cache["global_state"] = {"state": "UNKNOWN", "info": "Persistence missing"}
@@ -123,7 +135,8 @@ class DashboardStateManager:
             p = self.paths["product_lifecycle"]
             if os.path.exists(p):
                 with open(p, "r", encoding="utf-8") as f:
-                    self._cache["products"] = json.load(f)
+                    data = json.load(f)
+                    self._cache["products"] = data if isinstance(data, dict) else {}
             else:
                 self._cache["products"] = {}
         except Exception as e:
@@ -135,7 +148,8 @@ class DashboardStateManager:
             p = self.paths["finance_state"]
             if os.path.exists(p):
                 with open(p, "r", encoding="utf-8") as f:
-                    self._cache["budget"] = json.load(f)
+                    data = json.load(f)
+                    self._cache["budget"] = data if isinstance(data, dict) else {}
             else:
                 self._cache["budget"] = {}
         except Exception as e:
@@ -147,7 +161,8 @@ class DashboardStateManager:
             p = self.paths["commercial_state"]
             if os.path.exists(p):
                 with open(p, "r", encoding="utf-8") as f:
-                    self._cache["commercial"] = json.load(f)
+                    data = json.load(f)
+                    self._cache["commercial"] = data if isinstance(data, dict) else {}
             else:
                 self._cache["commercial"] = {}
         except Exception as e:
@@ -163,8 +178,26 @@ class DashboardStateManager:
             "max_calls_per_day": 100,
             "cost_today_usd": 1.25
         }
-        self._cache["products"] = {"mock_id": {"status": "ACTIVE", "name": "Mock Product"}}
-        self._cache["evaluations"] = [{"score": 0.98, "timestamp": iso_now}]
+        self._cache["products"] = {
+            "mock_id_1": {"product_id": "mock-prod-1", "state": "ACTIVE", "baseline_version": 1, "created_at": iso_now},
+            "mock_id_2": {"product_id": "mock-prod-2", "state": "DRAFT", "baseline_version": 2, "created_at": iso_now}
+        }
+        self._cache["evaluations"] = [
+            {
+                "timestamp": iso_now, 
+                "product_id": "mock-prod-1", 
+                "ice": "ALTO", 
+                "score_final": 0.98, 
+                "recommended": True
+            },
+            {
+                "timestamp": iso_now, 
+                "product_id": "mock-prod-2", 
+                "ice": "MEDIO", 
+                "score_final": 0.45, 
+                "recommended": False
+            }
+        ]
         self._cache["commercial"] = {"total_leads": 12, "last_synced": iso_now}
 
     def _log_history(self):

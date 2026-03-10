@@ -273,6 +273,12 @@
             cursor: pointer;
         }
 
+        .mode-btn.active {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
+        }
+
         .nav-bar {
             background: #13151a;
             border-bottom: 1px solid var(--border);
@@ -349,7 +355,8 @@
     <nav class="nav-bar">
         <a href="/dashboard" class="nav-item {% if section == 'overview' %}active{% endif %}">Overview</a>
         <a href="/dashboard/radar" class="nav-item {% if section == 'radar' %}active{% endif %}">Radar</a>
-        <a href="/dashboard/opportunities" class="nav-item {% if section == 'opportunities' %}active{% endif %}">Opportunities</a>
+        <a href="/dashboard/opportunities"
+            class="nav-item {% if section == 'opportunities' %}active{% endif %}">Opportunities</a>
         <a href="/dashboard/products" class="nav-item {% if section == 'products' %}active{% endif %}">Products</a>
         <a href="/dashboard/analytics" class="nav-item {% if section == 'analytics' %}active{% endif %}">Analytics</a>
         <a href="/dashboard/settings" class="nav-item {% if section == 'settings' %}active{% endif %}">Settings</a>
@@ -413,7 +420,7 @@
                 <tbody>
                     {% for ev in evals %}
                     <tr>
-                        <td>{{ ev.timestamp[:19] }}</td>
+                        <td>{{ (ev.timestamp or "")[:19] }}</td>
                         <td>{{ ev.product_id }}</td>
                         <td><span
                                 class="status-badge {% if ev.ice == 'ALTO' %}status-healthy{% else %}status-degraded{% endif %}"
@@ -447,7 +454,7 @@
                 <tbody>
                     {% for pd in products %}
                     <tr>
-                        <td>{{ pd.created_at[:19] }}</td>
+                        <td>{{ (pd.created_at or "")[:19] }}</td>
                         <td>{{ pd.product_id }}</td>
                         <td style="color:var(--accent);">{{ pd.state }}</td>
                         <td>v{{ pd.baseline_version }}</td>
@@ -523,9 +530,11 @@
                 <tbody>
                     {% for ev in evals %}
                     <tr>
-                        <td>{{ ev.timestamp[:19] }}</td>
+                        <td>{{ (ev.timestamp or "")[:19] }}</td>
                         <td>{{ ev.product_id }}</td>
-                        <td><span class="status-badge {% if ev.ice == 'ALTO' %}status-healthy{% else %}status-degraded{% endif %}" style="display:inline-flex;">{{ ev.ice }}</span></td>
+                        <td><span
+                                class="status-badge {% if ev.ice == 'ALTO' %}status-healthy{% else %}status-degraded{% endif %}"
+                                style="display:inline-flex;">{{ ev.ice }}</span></td>
                         <td>{{ "%.2f"|format(ev.score_final) if ev.score_final else '—' }}</td>
                         <td>{{ '✅ YES' if ev.recommended else '❌ NO' }}</td>
                     </tr>
@@ -558,7 +567,7 @@
                 <tbody>
                     {% for rec in recommendations %}
                     <tr>
-                        <td>{{ rec.timestamp[:10] }}</td>
+                        <td>{{ (rec.timestamp or "")[:10] }}</td>
                         <td>{{ rec.product_id }}</td>
                         <td>{{ "%.1f%%"|format(rec.score_final if rec.score_final else 0) }}</td>
                         <td>Expansion</td>
@@ -595,7 +604,7 @@
                         <td>{{ pd.product_id }}</td>
                         <td style="color:var(--accent);">{{ pd.state }}</td>
                         <td>v{{ pd.baseline_version }}</td>
-                        <td>{{ pd.created_at[:10] }}</td>
+                        <td>{{ (pd.created_at or "")[:10] }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -626,7 +635,8 @@
                     <p class="value">$0.00</p>
                 </div>
             </div>
-            <div class="placeholder" style="margin-top:1rem;">Advanced analytics visualization pending connection to MetricEngine.</div>
+            <div class="placeholder" style="margin-top:1rem;">Advanced analytics visualization pending connection to
+                MetricEngine.</div>
         </section>
         {% endif %}
 
@@ -640,7 +650,8 @@
                 <div class="card">
                     <h4>Autonomous Mode</h4>
                     <p style="font-size:0.8rem; color:var(--muted);">Global autonomous execution level.</p>
-                    <select disabled style="background:#0f1117; color:white; border:1px solid var(--border); padding:0.5rem; width:100%;">
+                    <select disabled
+                        style="background:#0f1117; color:white; border:1px solid var(--border); padding:0.5rem; width:100%;">
                         <option>Full Autonomous (V2 Standard)</option>
                         <option>Human-in-the-loop</option>
                     </select>
@@ -648,7 +659,8 @@
                 <div class="card">
                     <h4>Financial Containment Threshold</h4>
                     <p style="font-size:0.8rem; color:var(--muted);">Emergency stop at remaining balance.</p>
-                    <input type="text" value="$50.00" disabled style="background:#0f1117; color:white; border:1px solid var(--border); padding:0.5rem; width:100%;">
+                    <input type="text" value="$50.00" disabled
+                        style="background:#0f1117; color:white; border:1px solid var(--border); padding:0.5rem; width:100%;">
                 </div>
             </form>
         </section>

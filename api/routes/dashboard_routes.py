@@ -74,15 +74,15 @@ def dashboard():
     total_evals = len(evals)
     
     # Latest 10 product drafts 
-    prod_vals = list(products_dict.values())
-    prod_vals.sort(key=lambda x: x.get('created_at', ''), reverse=True)
+    prod_vals = [p for p in products_dict.values() if isinstance(p, dict)]
+    prod_vals.sort(key=lambda x: str(x.get('created_at') or ''), reverse=True)
     latest_drafts = prod_vals[:10]
     total_drafts = len(prod_vals)
 
     # Budget info
     budget_calls = budget.get("calls_today", 0)
     budget_max = budget.get("max_calls_per_day", 100)
-    budget_cost = f"{budget.get('cost_today_usd', 0.0):.2f}"
+    budget_cost = f"{float(budget.get('cost_today_usd', 0.0)):.2f}"
 
     # Verify if integrations are "unavailable" based on global state tracking
     error_alerts = []
@@ -147,17 +147,26 @@ def _get_base_context(data):
     """Helper to get base template context."""
     last_ts = data.get("last_updated", 0)
     last_updated_str = datetime.fromtimestamp(last_ts, tz=timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    
+    # Defensive data extraction
     budget = data.get("budget", {})
+    evals_list = data.get("evaluations", [])
+    products_raw = data.get("products", {})
+    
+    # Defensive counts
+    total_evals = len(evals_list)
+    total_drafts = len(products_raw) if isinstance(products_raw, dict) else 0
+
     return {
         "system_status": data.get("global_state", {}).get("state", "UNKNOWN"),
         "mode": dashboard_state.mode,
         "username": session.get("username"),
         "last_updated": last_updated_str,
-        "total_evals": len(data.get("evaluations", [])),
-        "total_drafts": len(data.get("products", {})),
+        "total_evals": total_evals,
+        "total_drafts": total_drafts,
         "budget_calls": budget.get("calls_today", 0),
         "budget_max": budget.get("max_calls_per_day", 100),
-        "budget_cost": f"{budget.get('cost_today_usd', 0.0):.2f}",
+        "budget_cost": f"{float(budget.get('cost_today_usd', 0.0)):.2f}",
         "error_alerts": []
     }
 
@@ -169,7 +178,7 @@ def refresh_data():
         return redirect(url_for("dashboard_routes.login"))
         
     dashboard_state.refresh_cache(force=True)
-    return redirect(url_for("dashboard_routes.dashboard"))
+    return redirect(request.referrer or url_for("dashboard_routes.dashboard"))
 
 
 @dashboard_bp.route("/dashboard/api/toggle_mock", methods=["POST"])
@@ -179,7 +188,7 @@ def toggle_mock():
         return redirect(url_for("dashboard_routes.login"))
         
     dashboard_state.toggle_mode()
-    return redirect(url_for("dashboard_routes.dashboard"))
+    return redirect(request.referrer or url_for("dashboard_routes.dashboard"))
 
 @dashboard_bp.route("/dashboard/api/debug_paths", methods=["GET"])
 def debug_paths():
