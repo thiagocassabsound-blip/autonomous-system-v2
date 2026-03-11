@@ -377,6 +377,7 @@
             </div>
             {% endfor %}
         </div>
+        {% endif %}
            <!-- 1. System Status -->
         <section class="section">
             <div class="section-header">
@@ -480,7 +481,7 @@
             </div>
             {% if products %}
             <div class="grid">
-                {% for pd in products if pd.state == 'ACTIVE' or pd.state == 'ATIVO' %}
+                {% for pd in products if pd is mapping and (pd.state == 'ACTIVE' or pd.state == 'ATIVO') %}
                 <div class="card">
                     <h4>{{ pd.product_id }}</h4>
                     <p class="value">v{{ pd.baseline_version }}</p>
@@ -684,7 +685,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for pd in products %}
+                    {% for pd in products if pd is mapping %}
                     <tr>
                         <td>{{ pd.product_id }}</td>
                         <td style="color:var(--accent);">{{ pd.state }}</td>
