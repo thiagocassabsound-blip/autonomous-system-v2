@@ -424,7 +424,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for ev in evals %}
+                    {% for ev in evals if ev is mapping %}
                     <tr>
                         <td>{{ (ev.timestamp or "")[11:19] }}</td>
                         <td>{{ ev.product_id }}</td>
@@ -458,7 +458,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for pd in products %}
+                    {% for pd in products if pd is mapping %}
                     <tr>
                         <td>{{ (pd.created_at or "")[11:19] }}</td>
                         <td>{{ pd.product_id }}</td>
@@ -579,7 +579,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for dec in ai_decisions %}
+                    {% for dec in ai_decisions if dec is mapping %}
                     <tr>
                         <td>{{ (dec.timestamp or "")[11:19] }}</td>
                         <td>{{ dec.decision }}</td>
@@ -613,7 +613,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for ev in evals %}
+                    {% for ev in evals if ev is mapping %}
                     <tr>
                         <td>{{ (ev.timestamp or "")[11:19] }}</td>
                         <td>{{ ev.product_id }}</td>
@@ -650,11 +650,11 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for rec in recommendations %}
+                    {% for rec in recommendations if rec is mapping %}
                     <tr>
                         <td>{{ (rec.timestamp or "")[:10] }}</td>
                         <td>{{ rec.product_id }}</td>
-                        <td>{{ "%.1f%%"|format(rec.score_final if rec.score_final else 0) }}</td>
+                        <td>{{ "%.1f%%"|format(rec.score_final|float if rec.score_final else 0.0) }}</td>
                         <td>Expansão</td>
                         <td style="color:var(--healthy);">RECOMENDADO</td>
                     </tr>

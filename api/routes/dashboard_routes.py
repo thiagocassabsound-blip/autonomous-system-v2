@@ -70,7 +70,11 @@ def dashboard_radar():
     if not session.get("authenticated"):
         return redirect(url_for("dashboard_routes.login"))
     data = dashboard_state.get_data()
-    return render_template("dashboard.html", section="radar", evals=data.get("evaluations", []), **_get_base_context(data))
+    # Base context already includes latest 10 'evals'. 
+    # For the full radar page, we override with all evaluations explicitly.
+    ctx = _get_base_context(data)
+    ctx["evals"] = data.get("evaluations") or []
+    return render_template("dashboard.html", section="radar", **ctx)
 
 @dashboard_bp.route("/dashboard/opportunities", methods=["GET"])
 def dashboard_opportunities():
@@ -78,15 +82,21 @@ def dashboard_opportunities():
         return redirect(url_for("dashboard_routes.login"))
     data = dashboard_state.get_data()
     # Filter for recommendations
-    recommendations = [e for e in data.get("evaluations", []) if e.get("recommended")]
-    return render_template("dashboard.html", section="opportunities", recommendations=recommendations, **_get_base_context(data))
+    recommendations = [e for e in (data.get("evaluations") or []) if isinstance(e, dict) and e.get("recommended")]
+    ctx = _get_base_context(data)
+    ctx["recommendations"] = recommendations
+    return render_template("dashboard.html", section="opportunities", **ctx)
 
 @dashboard_bp.route("/dashboard/products", methods=["GET"])
 def dashboard_products():
     if not session.get("authenticated"):
         return redirect(url_for("dashboard_routes.login"))
     data = dashboard_state.get_data()
-    return render_template("dashboard.html", section="products", products=list(data.get("products", {}).values()), **_get_base_context(data))
+    ctx = _get_base_context(data)
+    # Full list override
+    products_raw = data.get("products") or {}
+    ctx["products"] = list(products_raw.values()) if isinstance(products_raw, dict) else []
+    return render_template("dashboard.html", section="products", **ctx)
 
 @dashboard_bp.route("/dashboard/analytics", methods=["GET"])
 def dashboard_analytics():
@@ -128,8 +138,8 @@ def _get_base_context(data):
     latest_drafts = prod_vals[:10]
 
     # Defensive counts
-    total_evals = len(evals_list)
-    total_drafts = len(prod_vals)
+    total_evals = len(evals_list) if isinstance(evals_list, list) else 0
+    total_drafts = len(prod_vals) if isinstance(prod_vals, list) else 0
 
     # Status & Alerts
     system_status = data.get("global_state", {}).get("state", "UNKNOWN")
@@ -137,25 +147,30 @@ def _get_base_context(data):
     if system_status == "UNKNOWN":
         error_alerts.append("Motor de Estado indisponível - Falha na leitura de persistência.")
 
+    budget_data = data.get("budget") or {}
+    analytics_data = data.get("analytics") or {}
+
     return {
         "system_status": system_status,
         "mode": dashboard_state.mode,
         "username": session.get("username"),
         "last_updated": last_updated_str,
-        "budget_calls": budget.get("calls_today") or 0,
-        "budget_max": budget.get("max_calls_per_day") or 100,
-        "budget_cost": f"{safe_float(budget.get('cost_today_usd')):.2f}",
-        "stripe_balance": f"{safe_float(budget.get('stripe_balance_usd')):.2f}",
-        "ads_spend": f"{safe_float(budget.get('google_ads_spend_30d')):.2f}",
-        "evals": latest_evals,
-        "products": latest_drafts,
+        "total_evals": total_evals,
+        "total_drafts": total_drafts,
+        "budget_calls": budget_data.get("calls_today") or 0,
+        "budget_max": budget_data.get("max_calls_per_day") or 100,
+        "budget_cost": f"{safe_float(budget_data.get('cost_today_usd')):.2f}",
+        "stripe_balance": f"{safe_float(budget_data.get('stripe_balance_usd')):.2f}",
+        "ads_spend": f"{safe_float(budget_data.get('google_ads_spend_30d')):.2f}",
+        "evals": latest_evals if latest_evals else [],
+        "products": latest_drafts if latest_drafts else [],
         "analytics": {
-            "conversion_avg": f"{safe_float(data.get('analytics', {}).get('conversion_avg')):.1f}",
-            "retention_avg": f"{safe_float(data.get('analytics', {}).get('retention_avg')):.1f}",
-            "revenue_30d": f"{safe_float(data.get('analytics', {}).get('revenue_30d')):.2f}"
+            "conversion_avg": f"{safe_float(analytics_data.get('conversion_avg')):.1f}",
+            "retention_avg": f"{safe_float(analytics_data.get('retention_avg')):.1f}",
+            "revenue_30d": f"{safe_float(analytics_data.get('revenue_30d')):.2f}"
         },
         "ai_decisions": data.get("ai_decisions") or [],
-        "budget_data": budget,
+        "budget_data": budget_data,
         "error_alerts": error_alerts
     }
 
