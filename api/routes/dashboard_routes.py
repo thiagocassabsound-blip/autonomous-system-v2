@@ -59,36 +59,6 @@ def dashboard():
     data = dashboard_state.get_data()
     mode = dashboard_state.mode
     
-    global_s = data.get("global_state", {})
-    system_status = global_s.get("state", "UNKNOWN")
-    
-    evals = data.get("evaluations", [])
-    products_dict = data.get("products", {})
-    budget = data.get("budget", {})
-    last_ts_float = data.get("last_updated", 0)
-    
-    last_updated_str = datetime.fromtimestamp(last_ts_float, tz=timezone.utc).astimezone(timezone(timedelta(hours=-3))).strftime("%d/%m/%Y %H:%M:%S BRT")
-
-    # Latest 10 eval history (descending)
-    latest_evals = list(reversed(evals[-10:]))
-    total_evals = len(evals)
-    
-    # Latest 10 product drafts 
-    prod_vals = [p for p in products_dict.values() if isinstance(p, dict)]
-    prod_vals.sort(key=lambda x: str(x.get('created_at') or ''), reverse=True)
-    latest_drafts = prod_vals[:10]
-    total_drafts = len(prod_vals)
-
-    # Budget info
-    budget_calls = budget.get("calls_today", 0)
-    budget_max = budget.get("max_calls_per_day", 100)
-    budget_cost = f"{float(budget.get('cost_today_usd', 0.0)):.2f}"
-
-    # Verify if integrations are "unavailable" based on global state tracking
-    error_alerts = []
-    if system_status == "UNKNOWN":
-        error_alerts.append("Motor de Estado indisponível - Falha na leitura de persistência.")
-
     return render_template(
         "dashboard.html",
         section="overview",
