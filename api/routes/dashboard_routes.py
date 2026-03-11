@@ -102,6 +102,15 @@ def dashboard_settings():
     data = dashboard_state.get_data()
     return render_template("dashboard.html", section="settings", **_get_base_context(data))
 
+def safe_float(val, default=0.0):
+    """Safely converts a value to float, handling strings like 'None' or 'null'."""
+    if val is None:
+        return default
+    try:
+        return float(val)
+    except (ValueError, TypeError):
+        return default
+
 def _get_base_context(data):
     """Helper to get base template context, ensuring all required keys exist."""
     last_ts = data.get("last_updated", 0)
@@ -133,15 +142,19 @@ def _get_base_context(data):
         "mode": dashboard_state.mode,
         "username": session.get("username"),
         "last_updated": last_updated_str,
-        "total_evals": total_evals,
-        "total_drafts": total_drafts,
-        "budget_calls": budget.get("calls_today", 0),
-        "budget_max": budget.get("max_calls_per_day", 100),
-        "budget_cost": f"{float(budget.get('cost_today_usd') or 0.0):.2f}",
+        "budget_calls": budget.get("calls_today") or 0,
+        "budget_max": budget.get("max_calls_per_day") or 100,
+        "budget_cost": f"{safe_float(budget.get('cost_today_usd')):.2f}",
+        "stripe_balance": f"{safe_float(budget.get('stripe_balance_usd')):.2f}",
+        "ads_spend": f"{safe_float(budget.get('google_ads_spend_30d')):.2f}",
         "evals": latest_evals,
         "products": latest_drafts,
-        "analytics": data.get("analytics", {}),
-        "ai_decisions": data.get("ai_decisions", []),
+        "analytics": {
+            "conversion_avg": f"{safe_float(data.get('analytics', {}).get('conversion_avg')):.1f}",
+            "retention_avg": f"{safe_float(data.get('analytics', {}).get('retention_avg')):.1f}",
+            "revenue_30d": f"{safe_float(data.get('analytics', {}).get('revenue_30d')):.2f}"
+        },
+        "ai_decisions": data.get("ai_decisions") or [],
         "budget_data": budget,
         "error_alerts": error_alerts
     }

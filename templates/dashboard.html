@@ -512,7 +512,7 @@
                 </div>
                 <div class="card">
                     <h4>Receita (30d)</h4>
-                    <p class="value">${{ "%.2f"|format(analytics.revenue_30d or 0.0) }}</p>
+                    <p class="value">${{ analytics.revenue_30d }}</p>
                 </div>
             </div>
             {% else %}
@@ -529,11 +529,11 @@
             <div class="grid">
                 <div class="card">
                     <h4>Saldo Stripe</h4>
-                    <p class="value">${{ "%.2f"|format(budget_data.stripe_balance_usd or 0) }}</p>
+                    <p class="value">${{ stripe_balance }}</p>
                 </div>
                 <div class="card">
                     <h4>Gasto Ads (30d)</h4>
-                    <p class="value">${{ "%.2f"|format(budget_data.google_ads_spend_30d or 0) }}</p>
+                    <p class="value">${{ ads_spend }}</p>
                 </div>
                 <div class="card">
                     <h4>Custo LLM</h4>
@@ -718,7 +718,7 @@
                 </div>
                 <div class="card">
                     <h4>Receita (30d)</h4>
-                    <p class="value">${{ "%.2f"|format(analytics.revenue_30d or 0.0) }}</p>
+                    <p class="value">${{ analytics.revenue_30d }}</p>
                 </div>
             </div>
             {% else %}

@@ -236,7 +236,7 @@ class DashboardStateManager:
                 "summary": {
                     "evals": len(self._cache["evaluations"]),
                     "products": len(self._cache["products"]),
-                    "state": self._cache["global_state"].get("state", "UNKNOWN")
+                    "state": self._cache["global_state"].get("state", "UNKNOWN") if isinstance(self._cache["global_state"], dict) else "UNKNOWN"
                 }
             }
             p = self.paths["history_log"]
