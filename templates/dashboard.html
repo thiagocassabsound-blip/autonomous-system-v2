@@ -431,7 +431,7 @@
                         <td><span
                                 class="status-badge {% if ev.ice == 'ALTO' %}status-healthy{% else %}status-degraded{% endif %}"
                                 style="display:inline-flex;">{{ ev.ice }}</span></td>
-                        <td>{{ "%.2f"|format(ev.score_final) if ev.score_final else '—' }}</td>
+                        <td>{{ "%.2f"|format(ev.score_final|float if ev.score_final else 0.0) if ev.score_final else '—' }}</td>
                         <td>{{ '✅ SIM' if ev.recommended else '❌ NÃO' }}</td>
                     </tr>
                     {% endfor %}
@@ -620,7 +620,7 @@
                         <td><span
                                 class="status-badge {% if ev.ice == 'ALTO' %}status-healthy{% else %}status-degraded{% endif %}"
                                 style="display:inline-flex;">{{ ev.ice }}</span></td>
-                        <td>{{ "%.2f"|format(ev.score_final) if ev.score_final else '—' }}</td>
+                        <td>{{ "%.2f"|format(ev.score_final|float if ev.score_final else 0.0) if ev.score_final else '—' }}</td>
                         <td>{{ '✅ SIM' if ev.recommended else '❌ NÃO' }}</td>
                     </tr>
                     {% endfor %}

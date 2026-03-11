@@ -91,22 +91,8 @@ def dashboard():
 
     return render_template(
         "dashboard.html",
-        system_status=system_status,
-        mode=mode,
-        username=session.get("username"),
-        last_updated=last_updated_str,
-        total_evals=total_evals,
-        total_drafts=total_drafts,
-        budget_calls=budget_calls,
-        budget_max=budget_max,
-        budget_cost=budget_cost,
-        evals=latest_evals,
-        products=latest_drafts,
-        analytics=data.get("analytics", {}),
-        ai_decisions=data.get("ai_decisions", []),
-        budget_data=budget,
-        error_alerts=error_alerts,
-        section="overview"
+        section="overview",
+        **_get_base_context(data)
     )
 
 @dashboard_bp.route("/dashboard/radar", methods=["GET"])
@@ -147,7 +133,7 @@ def dashboard_settings():
     return render_template("dashboard.html", section="settings", **_get_base_context(data))
 
 def _get_base_context(data):
-    """Helper to get base template context."""
+    """Helper to get base template context, ensuring all required keys exist."""
     last_ts = data.get("last_updated", 0)
     last_updated_str = datetime.fromtimestamp(last_ts, tz=timezone.utc).astimezone(timezone(timedelta(hours=-3))).strftime("%d/%m/%Y %H:%M:%S BRT")
     
@@ -156,12 +142,24 @@ def _get_base_context(data):
     evals_list = data.get("evaluations", [])
     products_raw = data.get("products", {})
     
+    # Standardize eval/draft lists
+    latest_evals = list(reversed(evals_list[-10:]))
+    prod_vals = [p for p in products_raw.values() if isinstance(p, dict)]
+    prod_vals.sort(key=lambda x: str(x.get('created_at') or ''), reverse=True)
+    latest_drafts = prod_vals[:10]
+
     # Defensive counts
     total_evals = len(evals_list)
-    total_drafts = len(products_raw) if isinstance(products_raw, dict) else 0
+    total_drafts = len(prod_vals)
+
+    # Status & Alerts
+    system_status = data.get("global_state", {}).get("state", "UNKNOWN")
+    error_alerts = []
+    if system_status == "UNKNOWN":
+        error_alerts.append("Motor de Estado indisponível - Falha na leitura de persistência.")
 
     return {
-        "system_status": data.get("global_state", {}).get("state", "UNKNOWN"),
+        "system_status": system_status,
         "mode": dashboard_state.mode,
         "username": session.get("username"),
         "last_updated": last_updated_str,
@@ -169,8 +167,13 @@ def _get_base_context(data):
         "total_drafts": total_drafts,
         "budget_calls": budget.get("calls_today", 0),
         "budget_max": budget.get("max_calls_per_day", 100),
-        "budget_cost": f"{float(budget.get('cost_today_usd', 0.0)):.2f}",
-        "error_alerts": []
+        "budget_cost": f"{float(budget.get('cost_today_usd') or 0.0):.2f}",
+        "evals": latest_evals,
+        "products": latest_drafts,
+        "analytics": data.get("analytics", {}),
+        "ai_decisions": data.get("ai_decisions", []),
+        "budget_data": budget,
+        "error_alerts": error_alerts
     }
 
 
