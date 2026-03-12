@@ -47,7 +47,7 @@ class GoogleAdsEngine(TrafficEngineBase):
             self._initialized = True
             
             # Subscribe to beta_started to activate campaigns
-            EventBus.subscribe("beta_started", self.handle_beta_started_event)
+            self._orchestrator._bus.subscribe("beta_started", self.handle_beta_started_event)
             self.logger.info("[%s] System initialized successfully. Subscribed to beta_started.", self.channel_type)
             
         except Exception as e:

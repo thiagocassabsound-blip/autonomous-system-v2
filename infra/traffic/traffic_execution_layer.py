@@ -36,8 +36,8 @@ class TrafficExecutionLayer:
         """
         logger.info("[TrafficExecutionLayer] Initializing...")
         
-        # Susbscribe to landing ready signals
-        EventBus.subscribe("landing_ready_event", self.handle_landing_ready)
+        # Subscribe to landing ready signals
+        self._orchestrator._bus.subscribe("landing_ready_event", self.handle_landing_ready)
         
         # Register engines
         try:
