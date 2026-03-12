@@ -112,6 +112,10 @@ class Orchestrator:
         self._services[name] = service
         logger.info(f"Service registered: '{name}'")
 
+    def get_service(self, name: str):
+        """Public accessor for registered services."""
+        return self._services.get(name)
+
     # ------------------------------------------------------------------
     # Read-only state access
     # ------------------------------------------------------------------
@@ -148,6 +152,18 @@ class Orchestrator:
         # Fallback to environment variable
         import os
         return os.getenv("TRAFFIC_MODE", "manual").lower()
+
+    def get_ads_system_mode(self) -> str:
+        """
+        Returns the current ADS_SYSTEM_MODE governance policy.
+        enabled | disabled
+        """
+        gs = self._services.get("global_state")
+        if gs and hasattr(gs, 'get_ads_system_mode'):
+            return gs.get_ads_system_mode()
+        
+        import os
+        return os.getenv("ADS_SYSTEM_MODE", "enabled").lower()
 
     # ------------------------------------------------------------------
     # Main entry point

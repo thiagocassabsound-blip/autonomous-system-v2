@@ -42,6 +42,58 @@ def system_health_detail():
     except Exception as exc:
         return jsonify({"error": str(exc)}), 500
 
+@system_bp.route("/api/system/ads/global", methods=["POST"])
+def toggle_ads_global():
+    """Toggle the global ads system flag. Acts as a feature flag."""
+    from flask import request, current_app
+    gs = current_app.config.get('GLOBAL_STATE')
+    if not gs:
+        return jsonify({"error": "GlobalState not accessible"}), 500
+        
+    try:
+        data = request.get_json() or {}
+        # If 'enabled' is provided in payload, use it, else toggle current
+        if 'enabled' in data:
+            new_mode = "enabled" if data['enabled'] else "disabled"
+        else:
+            current_mode = gs.get_ads_system_mode()
+            new_mode = "disabled" if current_mode == "enabled" else "enabled"
+            
+        gs.set_ads_system_mode(new_mode, orchestrated=True)
+        
+        # Trigger cache refresh if dashboard_state is available
+        try:
+            from core.dashboard_state_manager import dashboard_state
+            dashboard_state.refresh_cache(force=True)
+        except Exception:
+            pass
+            
+        return jsonify({
+            "status": "success",
+            "enabled": new_mode == "enabled",
+            "mode": new_mode
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@system_bp.route("/api/opportunities", methods=["GET"])
+def get_opportunities():
+    """Returns ranked strategic opportunities from the Radar engine."""
+    from flask import current_app
+    soe = current_app.config.get('STRATEGIC_RADAR')
+    if not soe:
+        # Fallback empty list if engine missing
+        return jsonify({"opportunities": [], "count": 0})
+        
+    try:
+        opps = soe.get_ranked_opportunities()
+        return jsonify({
+            "opportunities": opps,
+            "count": len(opps)
+        })
+    except Exception as e:
+        return jsonify({"error": str(e), "opportunities": [], "count": 0}), 500
+
 @system_bp.route("/runtime-status", methods=["GET"])
 def runtime_status():
     """Return a static runtime status JSON."""

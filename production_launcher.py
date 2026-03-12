@@ -48,7 +48,7 @@ def bootstrap():
     
     # Use JsonFilePersistence for financial containment (matches V2 pattern)
     gs_pers = JsonFilePersistence("global_state.json")
-    gs = GlobalState(gs_pers)
+    gs = GlobalState(orchestrator, persistence=gs_pers)
     orchestrator.register_service("global_state", gs)
     
     # Finance & Product Life

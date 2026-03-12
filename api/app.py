@@ -25,6 +25,11 @@ def create_app(orchestrator):
     # Inject orchestrator into the app context or global if preferred for access in routes
     app.config['ORCHESTRATOR'] = orchestrator
     
+    # Expose specific engines for route accessibility (A15 Stabilized)
+    app.config['GLOBAL_STATE'] = orchestrator.get_service("global_state")
+    app.config['PRODUCT_LIFE_ENGINE'] = orchestrator.get_service("product_life")
+    app.config['STRATEGIC_RADAR'] = orchestrator.get_service("strategic_radar")
+    
     # Configure CORS for production domain
     CORS(app, resources={r"/*": {"origins": "https://app.fastoolhub.com"}})
     

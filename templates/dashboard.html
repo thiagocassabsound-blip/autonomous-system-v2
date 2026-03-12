@@ -786,6 +786,35 @@
             {% endif %}
         </section>
 
+
+        <!-- OPPORTUNITIES SECTION -->
+        {% if section == 'opportunities' %}
+        <section class="section">
+            <div class="section-header">
+                <h3 class="section-title">Oportunidades Estratégicas (Filtro Radar)</h3>
+            </div>
+            {% if recommendations %}
+            <div class="grid">
+                {% for rec in recommendations %}
+                <div class="card" style="border-left: 4px solid var(--healthy);">
+                    <h4>{{ rec.product_id }}</h4>
+                    <div style="font-size: 0.9rem; margin: 0.5rem 0;">
+                        <strong>Score Final:</strong> {{ "%.2f"|format(rec.score_final|float) }} <br>
+                        <strong>ICE:</strong> <span class="status-badge status-healthy" style="display:inline-flex;">{{ rec.ice }}</span>
+                    </div>
+                    <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 1rem;">{{ rec.strategy.central_hypothesis }}</p>
+                    <div class="btn-group">
+                        <button class="btn btn-sm btn-primary" onclick="alert('Funcionalidade em desenvolvimento: Criação de rascunho para ' + '{{ rec.product_id }}')">Validar Mercado</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="placeholder">0 opportunities found — Run radar to discover new markets.</div>
+            {% endif %}
+        </section>
+        {% endif %}
+
         {% endif %}
 
         <!-- RADAR SECTION -->
