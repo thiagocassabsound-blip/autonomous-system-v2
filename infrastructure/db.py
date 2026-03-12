@@ -179,12 +179,28 @@ class JSONLPersistence:
         self.filepath = filepath
 
     def load(self) -> list:
-        """Read all lines and parse as JSON objects."""
+        """Read all lines and parse as JSON objects. Supports hybrid format (standard JSON array OR JSONL)."""
         if not os.path.exists(self.filepath):
             return []
+            
         items = []
         try:
             with open(self.filepath, "r", encoding="utf-8") as f:
+                content = f.read().strip()
+                if not content:
+                    return []
+                
+                # Hybrid Detection: If the file starts with '[', treat as a single JSON array
+                if content.startswith("["):
+                    try:
+                        data = json.loads(content)
+                        return data if isinstance(data, list) else [data]
+                    except json.JSONDecodeError:
+                        # Fallback to line-by-line if it's a corrupted array or just lines starting with '['
+                        pass
+                
+                # Standard JSONL processing: line-by-line
+                f.seek(0)
                 for line in f:
                     line = line.strip()
                     if line:
