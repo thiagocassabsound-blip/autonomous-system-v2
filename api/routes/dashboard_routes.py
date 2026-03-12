@@ -17,7 +17,6 @@ dashboard_bp = Blueprint(
     "dashboard_routes", 
     __name__,
     template_folder="../../templates",
-    static_folder="../../static",
     strict_slashes=False
 )
 
@@ -54,7 +53,7 @@ def logout():
     return redirect(url_for("dashboard_routes.login"))
 
 
-@dashboard_bp.route("/dashboard", methods=["GET"])
+@dashboard_bp.route("/dashboard", methods=["GET"], strict_slashes=False)
 def dashboard():
     """Simplified system dashboard entry point."""
     if not session.get("authenticated"):
