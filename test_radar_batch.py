@@ -10,8 +10,13 @@ logger = get_logger("RadarBatchTest")
 class MockOrchestrator:
     def __init__(self):
         self.events = []
-    def receive_event(self, event):
-        self.events.append(event)
+    def receive_event(self, *args, **kwargs):
+        event_type = kwargs.get("event_type") or (args[0].get("type") if args and isinstance(args[0], dict) else (args[0] if args else "unknown"))
+        logger.info(f"[MockOrchestrator] Received event: {event_type}")
+        if args:
+            self.events.append(args[0])
+        else:
+            self.events.append(kwargs)
     def emit_event(self, event_type, product_id, payload, source="system"):
         self.events.append({"type": event_type, "payload": payload})
 
@@ -89,7 +94,7 @@ def run_large_scale_validation():
         total_time += elapsed
         
         status = result.get("status")
-        rec = result.get("qualified", False)
+        rec = result.get("recommended", False)
         
         sig_count = 0
         sources = 0
@@ -104,7 +109,8 @@ def run_large_scale_validation():
         if rec:
             opportunities_emitted += 1
             
-        print(f"[{elapsed:.2f}s] {kw[:30]:<30} -> {status} \t| Signals: {sig_count:3} (Sources: {sources}) | Qualified: {rec}")
+        reason = result.get("reason", "N/A")
+        print(f"[{elapsed:.2f}s] {kw[:30]:<30} -> {status} ({reason}) \t| Signals: {sig_count:3} (Sources: {sources}) | Recommended: {rec}")
 
     print("\n" + "="*60)
     print("📋 BATCH TEST SUMMARY")

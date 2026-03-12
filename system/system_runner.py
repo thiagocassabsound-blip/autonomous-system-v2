@@ -5,7 +5,7 @@ Activates the full autonomous cycle:
   1. Starts the Orchestrator (subscribes _on_cycle_tick to EventBus)
   2. Starts the Scheduler (emits cycle_tick every CYCLE_INTERVAL_SECONDS)
   3. Bootstraps the Landing Engine (registers expansion_recommendation_event handler)
-  4. Runs RadarEngine.run_cycle() periodically (every RADAR_INTERVAL_SECONDS)
+  4. Runs RadarEngine.run_cycle() only when triggered (Step 2: Manual Control)
 
 Constitutional guarantees:
   - Does NOT modify any engine, state machine, or orchestrator logic
@@ -49,64 +49,47 @@ def _next_keyword() -> tuple:
     return pair
 
 
-# ── Radar loop ────────────────────────────────────────────────────────────────
+# ── Radar loop (Step 1 Restoration) ───────────────────────────────────────────
 
 def _radar_loop(orchestrator) -> None:
     """
-    Periodically calls RadarEngine.run_cycle() to discover new opportunities.
-
-    Bootstrap Mode:
-      While stored_evaluations <= BOOTSTRAP_EVAL_LIMIT (default 3), passes
-      enriched eval_payload_overrides so Phase 4 scoring produces qualifying
-      results despite no historical ROAS/beta data. After the limit,
-      overrides are None and the ICE Gate operates at full strict governance.
+    Function logic for Radar execution. 
+    NOTE: Step 2 disables autonomous execution. This function remains as a 
+    structural reference and for potential deterministic triggers.
     """
-    logger.info("[SystemRunner] Radar loop started (interval=%ss)", RADAR_INTERVAL_SECONDS)
-    while True:
-        time.sleep(RADAR_INTERVAL_SECONDS)
-        keyword, category = _next_keyword()
-        logger.info("[SystemRunner] Running radar cycle: keyword='%s' category='%s'",
-                    keyword, category)
-        try:
-            from radar.radar_engine import RadarEngine
-            from core.strategic_opportunity_engine import StrategicOpportunityEngine
-            from infrastructure.opportunity_radar_persistence import OpportunityRadarPersistence
-            from infra.bootstrap.bootstrap_mode import get_bootstrap_overrides
+    logger.info("[SystemRunner] Radar logic initialized (Manual Mode Active).")
+    # Step 2: Continuous loop disabled. 
+    # For a manual execution system, we use the _on_radar_trigger handler.
+    pass
 
-            # ── Bootstrap check ────────────────────────────────────────
-            eval_payload_overrides = get_bootstrap_overrides()
-            if eval_payload_overrides is not None:
-                logger.info(
-                    "[SystemRunner] Bootstrap mode active — "
-                    "eval_payload_overrides injected for keyword='%s'", keyword
-                )
-            else:
-                logger.info("[SystemRunner] Strict ICE mode — no overrides for keyword='%s'", keyword)
+def execute_radar_now(orchestrator) -> None:
+    """Manual execution logic restored from backup pattern."""
+    keyword, category = _next_keyword()
+    logger.info("[SystemRunner] Executing manual radar cycle: keyword='%s' category='%s'",
+                keyword, category)
+    try:
+        from radar.radar_engine import RadarEngine
+        from core.strategic_opportunity_engine import StrategicOpportunityEngine
+        from infrastructure.opportunity_radar_persistence import OpportunityRadarPersistence
+        from infra.bootstrap.bootstrap_mode import get_bootstrap_overrides
 
-            radar_pers       = OpportunityRadarPersistence("radar_evaluations.json")
-            strategic_engine = StrategicOpportunityEngine(
-                orchestrator=orchestrator,
-                persistence=radar_pers,
-            )
-            radar  = RadarEngine(
-                orchestrator=orchestrator,
-                strategic_engine=strategic_engine,
-            )
-            result  = radar.run_cycle(
-                keyword=keyword,
-                category=category,
-                eval_payload_overrides=eval_payload_overrides,
-            )
-            phase7   = result.get("phases", {}).get("phase_7_recommendation", {})
-            emitted  = phase7.get("emitted", False)
-            ice_used = result.get("ice") or result.get("phases", {}).get(
-                           "phase_5_scoring", {}).get("ice")
-            logger.info(
-                "[SystemRunner] Radar cycle done. Recommendation emitted=%s ice=%s",
-                emitted, ice_used,
-            )
-        except Exception as exc:
-            logger.warning("[SystemRunner] Radar cycle error (non-fatal): %s", exc)
+        eval_payload_overrides = get_bootstrap_overrides()
+        radar_pers       = OpportunityRadarPersistence("radar_evaluations.json")
+        strategic_engine = StrategicOpportunityEngine(
+            orchestrator=orchestrator,
+            persistence=radar_pers,
+        )
+        radar  = RadarEngine(
+            orchestrator=orchestrator,
+            strategic_engine=strategic_engine,
+        )
+        radar.run_cycle(
+            keyword=keyword,
+            category=category,
+            eval_payload_overrides=eval_payload_overrides,
+        )
+    except Exception as exc:
+        logger.warning("[SystemRunner] Radar execution error: %s", exc)
 
 
 # ── Main runner ───────────────────────────────────────────────────────────────
@@ -148,17 +131,10 @@ def start_system_runner(orchestrator, event_bus) -> None:
     except Exception as exc:
         logger.warning("[SystemRunner] Scheduler error (non-fatal): %s", exc)
 
-    # 4. Start Radar background loop
-    radar_thread = threading.Thread(
-        target=_radar_loop,
-        args=(orchestrator,),
-        daemon=True,
-        name="RadarLoop",
-    )
-    radar_thread.start()
-    logger.info("[SystemRunner] Radar loop thread started ✓")
+    # 4. Step 2: MANUAL Radar Mode 
+    # Continuous background loop is NOT started to ensure manual control from Dashboard.
+    logger.info("[SystemRunner] Radar background thread DISABLED (Step 2: Manual Control Mode)")
 
-    logger.info("[SystemRunner] ✅ Autonomous System ACTIVE — "
-                "Cycle=%.0fs | Radar=%.0fs", CYCLE_INTERVAL_SECONDS, RADAR_INTERVAL_SECONDS)
+    logger.info("[SystemRunner] ✅ System ACTIVE (Manual Radar Control)")
     logger.info("Autonomous System runner started")
-    logger.info("Cycle executed")   # first synthetic confirmation for log audit
+    logger.info("Cycle executed")

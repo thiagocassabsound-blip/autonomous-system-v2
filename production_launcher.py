@@ -76,6 +76,11 @@ def bootstrap():
     soe = StrategicOpportunityEngine(orchestrator=orchestrator, persistence=radar_pers)
     orchestrator.register_service("strategic_radar", soe)
 
+    # 3.5 Traffic Infrastructure (Governed by TRAFFIC_MODE)
+    from infra.traffic.traffic_execution_layer import TrafficExecutionLayer
+    traffic_layer = TrafficExecutionLayer(orchestrator)
+    traffic_layer.initialize()
+
     # 4. Activate autonomous system (Orchestrator + Scheduler + Radar + Landing)
     start_system_runner(orchestrator, bus)
 

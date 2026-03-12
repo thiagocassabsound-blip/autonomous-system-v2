@@ -33,9 +33,9 @@ class SyntheticAuditProvider(BaseProvider):
         now = datetime.now(timezone.utc)
         
         # Generate 150 entries to comfortably pass Gate B (min 100)
-        # Spread over 15 days to pass Gate C and Noise Rule C
+        # Spread over 7 days to pass Gate C and Noise Rule C comfortably
         for i in range(150):
-            day_offset = i % 15
+            day_offset = i % 7
             dt = now - timedelta(days=day_offset, hours=i % 24)
             
             # Rotate through 3 sources

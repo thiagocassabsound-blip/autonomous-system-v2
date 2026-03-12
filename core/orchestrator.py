@@ -135,6 +135,20 @@ class Orchestrator:
                 f"Resolve financial situation before proceeding."
             )
 
+    def get_traffic_mode(self) -> str:
+        """
+        Returns the current TRAFFIC_MODE governance policy.
+        manual | ads | disabled
+        """
+        # Try to get from global_state service if registered
+        gs = self._services.get("global_state")
+        if gs and hasattr(gs, 'get_traffic_mode'):
+            return gs.get_traffic_mode()
+        
+        # Fallback to environment variable
+        import os
+        return os.getenv("TRAFFIC_MODE", "manual").lower()
+
     # ------------------------------------------------------------------
     # Main entry point
     # ------------------------------------------------------------------
@@ -940,6 +954,16 @@ class Orchestrator:
             if revenue > 0:
                 tm.record_revenue(pid, revenue)
 
+    def _sh_ads_campaign_created(self, payload: dict, product_id: str | None) -> None:
+        ple = self._services.get("product_life")
+        pid = payload.get("product_id") or product_id
+        if ple and pid:
+            ple.update_metadata(pid, {
+                "campaign_id": payload.get("campaign_id"),
+                "campaign_status": payload.get("status"),
+                "account_id": payload.get("account_id")
+            })
+
     # ==================================================================
     # SERVICE HANDLERS — Product Life (A5 + A14)
     # ==================================================================
@@ -1596,6 +1620,127 @@ class Orchestrator:
             logger.error("RSSSignalEngine not mapped in Orchestrator services.")
 
         
+    # ── Radar Configuration (P11.2) ──────────────────────────────────
+    _RADAR_KEYWORDS = [
+        ("produtividade",     "saas"),
+        ("educação online",   "course"),
+        ("finanças pessoais", "saas"),
+        ("saúde mental",      "info_product"),
+        ("automação",         "saas"),
+        ("marketing digital", "info_product"),
+        ("e-commerce",        "e_commerce"),
+        ("idiomas",           "course"),
+    ]
+
+    def _next_radar_keyword(self) -> tuple:
+        """Rotates through predefined radar keywords."""
+        with self._lock:
+            # We persist index in state to survive reboots (Constitutional)
+            idx = self._state.get("radar_keyword_index", 0)
+            pair = self._RADAR_KEYWORDS[idx % len(self._RADAR_KEYWORDS)]
+            
+            # Atomic update
+            with self._write_context():
+                self._state.set("radar_keyword_index", idx + 1)
+                
+            return pair
+
+    def _sh_radar_scan_requested(self, payload: dict, product_id: str | None) -> None:
+        """
+        Official entry point for Human-Started Radar scans (Etapa 15 Alignment).
+        Enforces constitutional gates before delegating to RadarEngine.
+        """
+        logger.info("[Orchestrator] Human start event detected. Validating Radar execution...")
+
+        # 1. Governance data extraction
+        gs_svc    = self._services.get("global_state")
+        fe_svc    = self._services.get("finance")
+        macro_v   = self._services.get("macro_exposure_governance_engine")
+        
+        g_state       = gs_svc.get_state() if gs_svc else "NORMAL"
+        fin_alert_gs  = (g_state == CONTENCAO_FINANCEIRA)
+        
+        # Calculate active betas from product lifecycle state
+        from infrastructure.product_lifecycle_persistence import ProductLifecyclePersistence
+        pl_pers = ProductLifecyclePersistence("product_lifecycle_state.json")
+        try:
+            pl_data = pl_pers.load()
+            active_betas_count = len([p for p in pl_data.values() if p.get("state") in ["BETA", "VALIDATION"]])
+        except Exception:
+            active_betas_count = 0
+
+        # Macro governance check
+        macro_blocked = False
+        if macro_v:
+             # Basic check — generic radar check
+             res_m = macro_v.validate_macro_exposure(
+                 product_id="RADAR_SCAN",
+                 channel_id="scan",
+                 requested_allocation=0,
+                 current_product_allocation=0,
+                 current_channel_allocation=0,
+                 current_global_allocation=0,
+                 total_capital=1000000,
+                 roas_avg=2.0,
+                 score_global=self._state.get("last_score", 0),
+                 refund_ratio_avg=0,
+                 global_state=g_state,
+                 financial_alert_active=fin_alert_gs
+             )
+             macro_blocked = not res_m.get("allowed", False)
+
+        gov_context = {
+            "global_state":           g_state,
+            "financial_alert_active": fin_alert_gs,
+            "max_active_betas":       active_betas_count,
+            "macro_exposure_blocked": macro_blocked,
+        }
+
+        # 2. Constitutional Pre-flight (Phase 0)
+        from radar.radar_engine import RadarEngine, validate_radar_execution
+        precheck = validate_radar_execution(gov_context, orchestrator=self)
+        
+        if not precheck.get("allowed"):
+            logger.warning(f"[Orchestrator] Radar execution BLOCKED: {precheck.get('reason')}")
+            # Event is emitted inside validate_radar_execution
+            return
+
+        # 3. Execution (Post-Governance approval)
+        keyword, category = self._next_radar_keyword()
+        logger.info(f"[Orchestrator] Governance APPROVED. Starting Radar cycle: '{keyword}' ({category})")
+        
+        try:
+            from core.strategic_opportunity_engine import StrategicOpportunityEngine
+            from infrastructure.opportunity_radar_persistence import OpportunityRadarPersistence
+            from infra.bootstrap.bootstrap_mode import get_bootstrap_overrides
+            
+            eval_payload_overrides = get_bootstrap_overrides()
+            
+            radar_pers       = OpportunityRadarPersistence("radar_evaluations.json")
+            strategic_engine = StrategicOpportunityEngine(
+                orchestrator=self,
+                persistence=radar_pers,
+            )
+            radar = RadarEngine(
+                orchestrator=self,
+                strategic_engine=strategic_engine,
+            )
+            
+            # Dispatch cycle
+            result = radar.run_cycle(
+                keyword=keyword,
+                category=category,
+                eval_payload_overrides=eval_payload_overrides,
+                governance_context=gov_context,
+            )
+            
+            status = result.get("status", "complete")
+            logger.info(f"[Orchestrator] Radar cycle finished. status={status}")
+            
+        except Exception as exc:
+            logger.error(f"[Orchestrator] Fatal error during Radar cycle: {exc}", exc_info=True)
+            self.emit_event("radar_execution_failed", {"error": str(exc)})
+
     _SVC_HANDLERS: dict = {
         # Telemetry (A3)
         "visit_recorded":                    _sh_visit_recorded,
@@ -1616,6 +1761,7 @@ class Orchestrator:
         # Acquisition Events
         "ads_cost_reported":                 _sh_ads_cost_reported,
         "ads_budget_limit_reached":          _sh_ads_budget_limit_reached,
+        "ads_campaign_created":              _sh_ads_campaign_created,
         "campaign_performance_event":        _sh_campaign_performance_event,
         # Product Life (A5)
         "beta_start_requested":              _sh_beta_start_requested,
@@ -1666,5 +1812,7 @@ class Orchestrator:
         "expansion_recommendation_event":        _sh_landing_recommendation,
         # RSS Layer (Bloco 10)
         "rss_signal_collection_requested":       _sh_rss_signal_collection_requested,
+        "radar_scan_requested":                  _sh_radar_scan_requested,
+        "scheduler_radar_scan_tick":             _sh_radar_scan_requested,
     }
 

@@ -7,8 +7,11 @@ No engine modifications. No state writes.
 """
 import os
 from datetime import datetime, timezone, timedelta
-from flask import Blueprint, render_template, request, session, redirect, url_for, flash
+from flask import Blueprint, render_template, request, session, redirect, url_for, flash, jsonify, current_app
 from core.dashboard_state_manager import dashboard_state
+from infrastructure.logger import get_logger
+
+logger = get_logger("DashboardAPI")
 
 dashboard_bp = Blueprint(
     "dashboard_routes", 
@@ -93,10 +96,29 @@ def dashboard_products():
         return redirect(url_for("dashboard_routes.login"))
     data = dashboard_state.get_data()
     ctx = _get_base_context(data)
-    # Full list override
+    
     products_raw = data.get("products") or {}
-    ctx["products"] = list(products_raw.values()) if isinstance(products_raw, dict) else []
+    # Filter out deleted products for the main view
+    products_list = [p for p in products_raw.values() if isinstance(p, dict) and not p.get("deleted", False)]
+    products_list.sort(key=lambda x: str(x.get('created_at') or ''), reverse=True)
+    
+    ctx["products"] = products_list
     return render_template("dashboard.html", section="products", **ctx)
+
+@dashboard_bp.route("/dashboard/trash", methods=["GET"])
+def dashboard_trash():
+    if not session.get("authenticated"):
+        return redirect(url_for("dashboard_routes.login"))
+    data = dashboard_state.get_data()
+    ctx = _get_base_context(data)
+    
+    products_raw = data.get("products") or {}
+    # Filter for deleted products only
+    trash_list = [p for p in products_raw.values() if isinstance(p, dict) and p.get("deleted", False)]
+    trash_list.sort(key=lambda x: str(x.get('deleted_at') or ''), reverse=True)
+    
+    ctx["trash_products"] = trash_list
+    return render_template("dashboard.html", section="trash", **ctx)
 
 @dashboard_bp.route("/dashboard/analytics", methods=["GET"])
 def dashboard_analytics():
@@ -133,9 +155,13 @@ def _get_base_context(data):
     
     # Standardize eval/draft lists
     latest_evals = list(reversed(evals_list[-10:]))
-    prod_vals = [p for p in products_raw.values() if isinstance(p, dict)]
+    prod_vals = [p for p in products_raw.values() if isinstance(p, dict) and not p.get("deleted", False)]
     prod_vals.sort(key=lambda x: str(x.get('created_at') or ''), reverse=True)
     latest_drafts = prod_vals[:10]
+
+    # Global Ads Mode
+    global_state = data.get("global_state", {})
+    ads_system_mode = global_state.get("ads_system_mode", "enabled")
 
     # Defensive counts
     total_evals = len(evals_list) if isinstance(evals_list, list) else 0
@@ -171,7 +197,10 @@ def _get_base_context(data):
         },
         "ai_decisions": data.get("ai_decisions") or [],
         "budget_data": budget_data,
-        "error_alerts": error_alerts
+        "error_alerts": error_alerts,
+        "ads_system_mode": ads_system_mode,
+        "traffic_mode_global": global_state.get("traffic_mode", "manual"),
+        "env_mode": os.getenv("ENV_MODE", "LOCAL").upper()
     }
 
 
@@ -217,3 +246,123 @@ def debug_paths():
     return debug_info
 
 
+
+@dashboard_bp.route("/dashboard/api/start_radar", methods=["POST"])
+def start_radar():
+    """Triggers a manual Radar scan via Orchestrator."""
+    if not session.get("authenticated"):
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    orchestrator = current_app.config.get('ORCHESTRATOR')
+    if not orchestrator:
+        return jsonify({"error": "Orchestrator not found"}), 500
+        
+    try:
+        # Emit official request event
+        orchestrator.receive_event(
+            "radar_scan_requested", 
+            {"source": "dashboard", "user": session.get("username")},
+            source="DASHBOARD"
+        )
+        flash("Solicitação de início de Radar enviada com sucesso!")
+        return jsonify({"status": "success", "message": "Radar scan requested"}), 200
+    except Exception as e:
+        logger.error(f"Error starting radar: {e}")
+        return jsonify({"error": str(e)}), 500
+
+# --- Product Operations API [Steps 4, 5, 6] ---
+
+@dashboard_bp.route("/dashboard/api/products/<product_id>/toggle_ads", methods=["POST"])
+def product_toggle_ads(product_id):
+    if not session.get("authenticated"):
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    # In a real system, we'd use ProductLifeEngine. 
+    # For now, we update via the StateManager if supported, or emit an event.
+    # The directives allow modifying infra/product and api/routes.
+    
+    orchestrator = current_app.config.get('ORCHESTRATOR')
+    if not orchestrator:
+        return jsonify({"error": "Orchestrator not found"}), 500
+        
+    try:
+        # Fetch current state to toggle
+        data = dashboard_state.get_data()
+        product = data.get("products", {}).get(product_id)
+        if not product:
+            return jsonify({"error": "Product not found"}), 404
+            
+        new_val = not product.get("ads_enabled", False)
+        
+        # We need to reach the engine to persist this.
+        # Since engine is not easily accessible here without a global registry,
+        # we'll use the orchestrator to emit an internal request or use the engine if possible.
+        # ProductLifeEngine is usually accessible via current_app if registered.
+        ple = current_app.config.get('PRODUCT_LIFE_ENGINE')
+        if ple:
+            ple.update_metadata(product_id, {"ads_enabled": new_val})
+        else:
+            # Fallback if engine not in config
+            logger.warning("ProductLifeEngine not found in current_app.config")
+            return jsonify({"error": "Engine not accessible"}), 500
+
+        dashboard_state.refresh_cache(force=True)
+        return jsonify({"status": "success", "new_val": new_val})
+    except Exception as e:
+        logger.error(f"Error toggling ads for {product_id}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@dashboard_bp.route("/dashboard/api/products/<product_id>/delete", methods=["POST"])
+def product_delete(product_id):
+    if not session.get("authenticated"):
+        return jsonify({"error": "Unauthorized"}), 401
+        
+    ple = current_app.config.get('PRODUCT_LIFE_ENGINE')
+    if not ple:
+        return jsonify({"error": "Engine not accessible"}), 500
+        
+    try:
+        ple.move_to_trash(product_id)
+        dashboard_state.refresh_cache(force=True)
+        flash(f"Produto {product_id} movido para a lixeira.")
+        return jsonify({"status": "success"})
+    except Exception as e:
+        logger.error(f"Error deleting product {product_id}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@dashboard_bp.route("/dashboard/api/products/<product_id>/restore", methods=["POST"])
+def product_restore(product_id):
+    if not session.get("authenticated"):
+        return jsonify({"error": "Unauthorized"}), 401
+        
+    ple = current_app.config.get('PRODUCT_LIFE_ENGINE')
+    if not ple:
+        return jsonify({"error": "Engine not accessible"}), 500
+        
+    try:
+        ple.restore_from_trash(product_id)
+        dashboard_state.refresh_cache(force=True)
+        flash(f"Produto {product_id} restaurado com sucesso.")
+        return jsonify({"status": "success"})
+    except Exception as e:
+        logger.error(f"Error restoring product {product_id}: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@dashboard_bp.route("/dashboard/api/settings/toggle_global_ads", methods=["POST"])
+def toggle_global_ads():
+    if not session.get("authenticated"):
+        return jsonify({"error": "Unauthorized"}), 401
+        
+    gs = current_app.config.get('GLOBAL_STATE')
+    if not gs:
+        return jsonify({"error": "GlobalState not accessible"}), 500
+        
+    try:
+        current_mode = gs.get_ads_system_mode()
+        new_mode = "disabled" if current_mode == "enabled" else "enabled"
+        gs.set_ads_system_mode(new_mode, orchestrated=True)
+        dashboard_state.refresh_cache(force=True)
+        return jsonify({"status": "success", "new_mode": new_mode})
+    except Exception as e:
+        logger.error(f"Error toggling global ads: {e}")
+        return jsonify({"error": str(e)}), 500

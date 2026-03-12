@@ -14,7 +14,8 @@ class IntegrationValidator:
         "GOOGLE_ADS_CLIENT_ID",
         "GOOGLE_ADS_CLIENT_SECRET",
         "GOOGLE_ADS_REFRESH_TOKEN",
-        "GOOGLE_ADS_LOGIN_CUSTOMER_ID"
+        "GOOGLE_ADS_MCC_ACCOUNT_ID",
+        "GOOGLE_ADS_CHILD_ACCOUNT_ID"
     ]
 
     @staticmethod

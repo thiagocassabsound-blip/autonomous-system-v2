@@ -39,7 +39,7 @@ class P12RuntimeActivator:
         load_dotenv(os.path.join(BASE_DIR, ".env"))
         req_vars = [
             "OPENAI_API_KEY", "STRIPE_SECRET_KEY", "SERPER_API_KEY", "RESEND_API_KEY",
-            "GOOGLE_ADS_DEVELOPER_TOKEN", "GOOGLE_ADS_CLIENT_ID", "GOOGLE_ADS_CLIENT_SECRET", "GOOGLE_ADS_REFRESH_TOKEN", "GOOGLE_ADS_LOGIN_CUSTOMER_ID"
+            "GOOGLE_ADS_DEVELOPER_TOKEN", "GOOGLE_ADS_CLIENT_ID", "GOOGLE_ADS_CLIENT_SECRET", "GOOGLE_ADS_REFRESH_TOKEN", "GOOGLE_ADS_MCC_ACCOUNT_ID", "GOOGLE_ADS_CHILD_ACCOUNT_ID"
         ]
         missing = []
         for var in req_vars:

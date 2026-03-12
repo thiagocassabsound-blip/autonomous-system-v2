@@ -120,6 +120,9 @@ class ProductLifeEngine:
             f"Thresholds: rpm≥{min_rpm}, roas≥{min_roas}, margin≥{min_margin}"
         )
 
+        # Step 4: 365-day retention policy (auto-cleanup trash on startup)
+        self.cleanup_trash()
+
     # -------------------------------------------------------------------
     # 0. Create Draft  [A14-NEW]
     # -------------------------------------------------------------------
@@ -194,6 +197,21 @@ class ProductLifeEngine:
             "beta_closed_at":         None,
             "classification":         None,
             "last_transition":        now.isoformat(),
+            # Campaign fields [NEW]
+            "campaign_id":            None,
+            "campaign_status":        None,
+            "traffic_validation_status": None,
+
+            # --- Operational Layer [Step 1, 4, 6] ---
+            "product_stage":          "product_created",
+            "product_events": [
+                {"stage": "radar_detected",      "timestamp": now.isoformat()},
+                {"stage": "opportunity_created", "timestamp": now.isoformat()},
+                {"stage": "product_created",     "timestamp": now.isoformat()}
+            ],
+            "ads_enabled":            False,
+            "deleted":                False,
+            "deleted_at":             None
         }
 
         self._state[product_id] = record
@@ -213,6 +231,9 @@ class ProductLifeEngine:
                 "competitive_gap_flag":   record["competitive_gap_flag"],
                 "version_id":             str(version_id),
                 "created_at":             now.isoformat(),
+                "campaign_id":            None,
+                "campaign_status":        None,
+                "traffic_validation_status": None,
                 "note": (
                     "Draft state: no financial allocation, no Ads, "
                     "no automatic Beta. Awaiting beta_approved_requested."
@@ -225,6 +246,47 @@ class ProductLifeEngine:
             f"from opportunity_id='{opportunity_id}' at {now.isoformat()}"
         )
         return record
+
+    def update_metadata(self, product_id: str, updates: dict) -> dict:
+        """
+        Update specific metadata fields for a product.
+        Used for campaign_id, campaign_status, etc.
+        """
+        p   = str(product_id)
+        rec = self._require_record(p)
+        
+        allowed_fields = {
+            "campaign_id", "campaign_status", "traffic_validation_status",
+            "landing_url", "ad_group_id", "ads_enabled"
+        }
+        
+        for k, v in updates.items():
+            if k in allowed_fields:
+                rec[k] = v
+                # Auto-transition stage if landing_url is provided
+                if k == "landing_url" and v:
+                    self._record_event(p, "landing_generated")
+        
+        rec["last_transition"] = self._now().isoformat()
+        self._save()
+        logger.info(f"Updated metadata for {p}: {updates.keys()}")
+        return rec
+
+    def _record_event(self, product_id: str, stage: str):
+        """Internal helper to record a lifecycle stage transition."""
+        rec = self._state.get(str(product_id))
+        if not rec: return
+        
+        now = self._now().isoformat()
+        rec["product_stage"] = stage
+        if "product_events" not in rec or not isinstance(rec["product_events"], list):
+            rec["product_events"] = []
+            
+        # Avoid duplicate consecutive stages
+        if not rec["product_events"] or rec["product_events"][-1]["stage"] != stage:
+            rec["product_events"].append({"stage": stage, "timestamp": now})
+            logger.info(f"Event recorded for {product_id}: {stage}")
+
 
     # -------------------------------------------------------------------
     # 1. Start Beta
@@ -362,6 +424,7 @@ class ProductLifeEngine:
             }
             self._state[p] = rec
 
+        self._record_event(p, "beta_started")
         self._save()
 
         orchestrator.emit_event(
@@ -554,6 +617,10 @@ class ProductLifeEngine:
             except Exception as e:
                 logger.error(f"Post-beta transition failed for '{p}': {e}")
 
+        # Update stage
+        if eligible:
+            self._record_event(p, "test_running")
+        
         # --- Persist classification ---
         rec["classification"]  = classification
         rec["state"]           = state_machine.get_state(p) if state_machine else target_state
@@ -589,6 +656,68 @@ class ProductLifeEngine:
             "snapshot":       snapshot,
             "transition":     transition_result,
         }
+
+    # -------------------------------------------------------------------
+    # 7. Soft Delete (Trash) [Step 4]
+    # -------------------------------------------------------------------
+
+    def move_to_trash(self, product_id: str) -> dict:
+        """Sets deleted=True and records deleted_at timestamp."""
+        p = str(product_id)
+        rec = self._require_record(p)
+        now = self._now().isoformat()
+        
+        rec["deleted"] = True
+        rec["deleted_at"] = now
+        rec["last_transition"] = now
+        self._save()
+        
+        logger.info(f"Product moved to trash: {p}")
+        return rec
+
+    def restore_from_trash(self, product_id: str) -> dict:
+        """Restores a product from trash."""
+        p = str(product_id)
+        rec = self._require_record(p)
+        now = self._now().isoformat()
+        
+        rec["deleted"] = False
+        rec["deleted_at"] = None
+        rec["last_transition"] = now
+        self._save()
+        
+        logger.info(f"Product restored from trash: {p}")
+        return rec
+
+    def delete_permanently(self, product_id: str) -> bool:
+        """Permanently removes a product from persistence."""
+        p = str(product_id)
+        if p in self._state:
+            del self._state[p]
+            self._save()
+            logger.info(f"Product permanently deleted: {p}")
+            return True
+        return False
+
+    def cleanup_trash(self, retention_days: int = 365):
+        """Removes products from trash that are older than retention_days."""
+        now = self._now()
+        to_delete = []
+        
+        for pid, rec in self._state.items():
+            if rec.get("deleted") and rec.get("deleted_at"):
+                try:
+                    del_at = datetime.fromisoformat(rec["deleted_at"])
+                    if (now - del_at).days >= retention_days:
+                        to_delete.append(pid)
+                except Exception as e:
+                    logger.warning(f"Failed to parse deleted_at for {pid}: {e}")
+        
+        if to_delete:
+            for pid in to_delete:
+                del self._state[pid]
+            self._save()
+            logger.info(f"Trash cleanup: permanently deleted {len(to_delete)} products.")
 
     # -------------------------------------------------------------------
     # 6. Limbo Detection

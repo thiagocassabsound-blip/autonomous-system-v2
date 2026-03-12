@@ -739,6 +739,17 @@ class RadarEngine:
             f"[RadarEngine] Cycle complete. keyword='{keyword}' "
             f"emitted={pipeline_result['recommended']} ice={pipeline_result['ice']}"
         )
+
+        # Step 9: Detailed Operational Observability Log
+        if pipeline_result["recommended"]:
+            logger.info(
+                f"\n>>> Radar Opportunity Detected <<<\n"
+                f"Keyword: \"{keyword}\"\n"
+                f"Score: {pipeline_result['score_final']}\n"
+                f"ICE: {pipeline_result['ice']}\n"
+                f"Recommended: True\n"
+            )
+
         return pipeline_result
 
 

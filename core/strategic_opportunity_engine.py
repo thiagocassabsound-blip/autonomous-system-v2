@@ -75,11 +75,11 @@ GROWTH_PERCENT_MIN      = 15.0
 NOISE_FILTER_CUT        = 60.0
 MIN_SOURCES             = 3
 MIN_OCCURRENCES         = 100
-SCORE_GLOBAL_MIN        = 78.0
+SCORE_GLOBAL_MIN        = 75.0
 ROAS_MIN                = 1.6
 MAX_BETAS               = 2
 CLUSTER_RATIO_THRESHOLD = 0.30
-CLUSTER_PENALTY_FACTOR  = 0.60
+CLUSTER_PENALTY_FACTOR  = 0.90
 
 
 # ==============================================================================
@@ -294,6 +294,46 @@ class StrategicOpportunityEngine:
             f"StrategicOpportunityEngine V2 initialized. "
             f"Stored evaluations: {len(self._records)}"
         )
+
+    # ==========================================================================
+    # SIGNAL RECALIBRATION (Step 6/7)
+    # ==========================================================================
+
+    def _recalibrate_signals(self, payload: dict, pid: str) -> dict:
+        """
+        Recalibrates signals before scoring based on market pain indicators.
+        Competition (cluster_ratio) is interpreted as validated demand, reducing penalty.
+        Manual workarounds (spreadsheets, scripts) increase intensity and monetization.
+        """
+        p = str(pid).lower()
+        new_payload = payload.copy()
+
+        # 1. Pain & Automation Signals (Increase Emotional Intensity)
+        pain_boost = 0.0
+        if any(k in p for k in ["automate", "automação", "how to", "como", "workflow", "recorrente"]):
+            pain_boost += 15.0
+        if any(k in p for k in ["spreadsheet", "planilha", "excel", "sheets", "manual", "script"]):
+            pain_boost += 25.0  # Manual workarounds are high value signals
+
+        if pain_boost > 0:
+            new_payload["intensity"] = min(100.0, float(new_payload.get("intensity", 50.0)) + pain_boost)
+            new_payload["recurrence"] = min(100.0, float(new_payload.get("recurrence", 50.0)) + (pain_boost * 0.5))
+
+        # 2. Search Intent & Commercial Signals (Increase Monetization)
+        mon_boost = 0.0
+        if any(k in p for k in ["tool", "ferramenta", "software", "app", "software for", "melhor"]):
+            mon_boost += 15.0
+        if any(k in p for k in ["platform", "plataforma", "service", "saas"]):
+            mon_boost += 10.0
+
+        if mon_boost > 0:
+            new_payload["intent"] = min(100.0, float(new_payload.get("intent", 50.0)) + mon_boost)
+            new_payload["validation"] = min(100.0, float(new_payload.get("validation", 40.0)) + (mon_boost * 0.7))
+
+        if mon_boost > 0 or pain_boost > 0:
+            logger.info(f"[SignalRecalibration] Recalibrated signals for '{pid}': PainBoost={pain_boost} MonBoost={mon_boost}")
+
+        return new_payload
 
     # ==========================================================================
     # PHASE 0 — GOVERNANCE PRE-CHECK (B6)
@@ -752,7 +792,9 @@ class StrategicOpportunityEngine:
         # PHASE 4 — STRUCTURED SCORING LAYER
         # ------------------------------------------------------------------
         try:
-            scores = self._phase4_scoring(payload, sources, occurrence_total, growth_percent)
+            # Step 6/7: Recalibrate signals before scoring
+            recalibrated_payload = self._recalibrate_signals(payload, pid)
+            scores = self._phase4_scoring(recalibrated_payload, sources, occurrence_total, growth_percent)
         except ValueError as exc:
             self.orchestrator.emit_event(
                 event_type="opportunity_not_qualified",
@@ -765,8 +807,10 @@ class StrategicOpportunityEngine:
         # ------------------------------------------------------------------
         # ICE CALCULATION (after scoring, before recommendation)
         # ------------------------------------------------------------------
+        # V2 Fix: We MUST use the computed score_final from our own logic,
+        # not a verbatim value from the input payload (which might be 0.0 or missing).
         ice, ice_reasons = classify_ice(
-            score_global = float(payload.get("score_global", 0.0)),
+            score_global = float(scores["score_final"]),
             roas_avg     = float(payload.get("roas", 0.0)),
             global_state = str(payload.get("global_state", "NORMAL")),
             active_betas = int(payload.get("active_betas", 0)),

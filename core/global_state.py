@@ -23,6 +23,16 @@ VALID_GLOBAL_STATES: frozenset = frozenset({
     CONTENCAO_FINANCEIRA,
 })
 
+TRAFFIC_MANUAL   = "manual"
+TRAFFIC_ADS      = "ads"
+TRAFFIC_DISABLED = "disabled"
+
+VALID_TRAFFIC_MODES: frozenset = frozenset({
+    TRAFFIC_MANUAL,
+    TRAFFIC_ADS,
+    TRAFFIC_DISABLED,
+})
+
 
 class GlobalState:
     """
@@ -44,8 +54,19 @@ class GlobalState:
             loaded = data.get("state", NORMAL)
             if loaded in VALID_GLOBAL_STATES:
                 self._state = loaded
+            
+            import os
+            self._traffic_mode = data.get("traffic_mode") or os.getenv("TRAFFIC_MODE", TRAFFIC_MANUAL)
+            if self._traffic_mode not in VALID_TRAFFIC_MODES:
+                self._traffic_mode = TRAFFIC_MANUAL
+            
+            self._ads_system_mode = data.get("ads_system_mode") or os.getenv("ADS_SYSTEM_MODE", "enabled")
+        else:
+            import os
+            self._traffic_mode = os.getenv("TRAFFIC_MODE", TRAFFIC_MANUAL)
+            self._ads_system_mode = os.getenv("ADS_SYSTEM_MODE", "enabled")
 
-        logger.info(f"GlobalState initialized: {self._state}")
+        logger.info(f"GlobalState initialized: {self._state} (Traffic: {self._traffic_mode}, Ads: {self._ads_system_mode})")
 
     # ------------------------------------------------------------------
     # Public API
@@ -53,6 +74,29 @@ class GlobalState:
 
     def get_state(self) -> str:
         return self._state
+
+    def get_traffic_mode(self) -> str:
+        return self._traffic_mode
+
+    def get_ads_system_mode(self) -> str:
+        """Returns 'enabled' or 'disabled'."""
+        return self._ads_system_mode
+
+    def set_ads_system_mode(self, mode: str, orchestrated: bool = False):
+        """Toggle global ads control. Mode must be 'enabled' or 'disabled'."""
+        if mode not in ["enabled", "disabled"]:
+            raise ValueError("Ads mode must be 'enabled' or 'disabled'")
+        
+        if STRICT_MODE and not orchestrated:
+             raise RuntimeError("STRICT_MODE_VIOLATION: global ads mode write.")
+
+        self._ads_system_mode = mode
+        if self._persistence:
+            current = self._persistence.load()
+            current["ads_system_mode"] = mode
+            self._persistence.save(current)
+        
+        logger.info(f"Global Ads System Mode set to: {mode}")
 
     def _enter_orchestrated_context(self):
         self._orchestrated_context = True
@@ -108,9 +152,11 @@ class GlobalState:
 
         if self._persistence:
             self._persistence.save({
-                "state":         new_state,
-                "last_updated":  datetime.now(timezone.utc).isoformat(),
-                "reason":        reason,
+                "state":             new_state,
+                "last_updated":      datetime.now(timezone.utc).isoformat(),
+                "reason":            reason,
+                "traffic_mode":      self._traffic_mode,
+                "ads_system_mode":   self._ads_system_mode,
             })
 
         if old_state != new_state:

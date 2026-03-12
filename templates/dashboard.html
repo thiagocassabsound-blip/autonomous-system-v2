@@ -305,6 +305,187 @@
             color: var(--accent);
             border-bottom-color: var(--accent);
         }
+
+        /* Timeline Styles [Step 2] */
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            margin: 1rem 0;
+            position: relative;
+            padding: 0 5px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--border);
+            z-index: 1;
+            transform: translateY(-50%);
+        }
+
+        .timeline-step {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--border);
+            z-index: 2;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .timeline-step.active {
+            background: var(--healthy);
+            box-shadow: 0 0 8px var(--healthy);
+            transform: scale(1.3);
+        }
+
+        .timeline-step.completed {
+            background: var(--accent);
+        }
+
+        .timeline-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.6rem;
+            color: var(--muted);
+            margin-top: -5px;
+        }
+
+        /* Grid & Card overrides [Step 3] */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .product-card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+
+        .product-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .product-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .product-title {
+            font-weight: bold;
+            font-size: 1rem;
+            margin: 0;
+            color: var(--text);
+        }
+
+        .product-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+
+        .badge {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .badge-draft { background: rgba(148, 163, 184, 0.1); color: #94a3b8; }
+        .badge-beta { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+        .badge-active { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+
+        .btn-group {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: auto;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .btn-sm {
+            padding: 0.3rem 0.6rem;
+            font-size: 0.7rem;
+        }
+
+        .btn-danger {
+            color: #f87171;
+        }
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: #ef4444;
+            color: #ef4444;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 34px;
+            height: 20px;
+        }
+
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #2d3748;
+            transition: .4s;
+            border-radius: 20px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--healthy);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(14px);
+        }
+
+        .switch.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(1);
+        }
+        .switch.disabled .slider {
+            cursor: not-allowed;
+        }
     </style>
 </head>
 
@@ -325,7 +506,7 @@
         </div>
 
         <div class="header-middle">
-            <div class="meta-item">Ambiente: <strong>LOCAL</strong></div>
+            <div class="meta-item">Ambiente: <strong>{{ env_mode }}</strong></div>
             <div class="meta-item">Última Atualização: <strong>{{ last_updated }}</strong></div>
 
             <div class="mode-toggle">
@@ -339,9 +520,7 @@
         </div>
 
         <div class="header-right">
-            <button class="btn-primary"
-                onclick="alert('Ação requer capacidade de execução manual do Orchestrator (Aguardando conexão do motor)')">Iniciar
-                Radar</button>
+            <button class="btn-primary" id="btn-start-radar">Iniciar Radar</button>
             <form action="/dashboard/api/refresh" method="POST" style="margin:0;display:inline;">
                 <button type="submit">Atualizar Dados</button>
             </form>
@@ -358,6 +537,7 @@
         <a href="/dashboard/opportunities"
             class="nav-item {% if section == 'opportunities' %}active{% endif %}">Oportunidades</a>
         <a href="/dashboard/products" class="nav-item {% if section == 'products' %}active{% endif %}">Produtos</a>
+        <a href="/dashboard/trash" class="nav-item {% if section == 'trash' %}active{% endif %}">Lixeira</a>
         <a href="/dashboard/analytics" class="nav-item {% if section == 'analytics' %}active{% endif %}">Análise</a>
         <a href="/dashboard/settings" class="nav-item {% if section == 'settings' %}active{% endif %}">Configurações</a>
     </nav>
@@ -404,6 +584,18 @@
                     <div style="font-size:0.75rem;color:var(--muted);margin-top:0.25rem;">Status: Seguro</div>
                 </div>
                 {% endif %}
+
+                <div class="card" style="border-left: 4px solid var({% if ads_system_mode == 'enabled' %}--healthy{% else %}--error{% endif %});">
+                    <h4>Governance: Ads Global</h4>
+                    <div style="display:flex; align-items:center; justify-content:space-between; margin-top:0.5rem;">
+                        <span style="font-size:0.8rem; color:var(--muted);">Status: <strong id="global-ads-status" style="color:var({% if ads_system_mode == 'enabled' %}--healthy{% else %}--error{% endif %});">{{ ads_system_mode|upper }}</strong></span>
+                        <label class="switch">
+                            <input type="checkbox" {% if ads_system_mode == 'enabled' %}checked{% endif %} 
+                                   onchange="toggleGlobalAds(this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -633,70 +825,122 @@
         </section>
         {% endif %}
 
-        <!-- OPPORTUNITIES SECTION -->
-        {% if section == 'opportunities' %}
-        <section class="section">
-            <div class="section-header">
-                <h3 class="section-title">Oportunidades Estratégicas</h3>
-            </div>
-            {% if recommendations %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>Data</th>
-                        <th>ID da Opp</th>
-                        <th>Confiança</th>
-                        <th>Tipo</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for rec in recommendations if rec is mapping %}
-                    <tr>
-                        <td>{{ (rec.timestamp or "")[:10] }}</td>
-                        <td>{{ rec.product_id }}</td>
-                        <td>{{ "%.1f%%"|format(rec.score_final|float if rec.score_final else 0.0) }}</td>
-                        <td>Expansão</td>
-                        <td style="color:var(--healthy);">RECOMENDADO</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            {% else %}
-            <div class="placeholder">Nenhuma oportunidade recomendada no momento.</div>
-            {% endif %}
-        </section>
-        {% endif %}
-
-        <!-- PRODUCTS SECTION -->
+        <!-- PRODUCTS SECTION [Step 2, 3] -->
         {% if section == 'products' %}
         <section class="section">
             <div class="section-header">
-                <h3 class="section-title">Todos os Produtos</h3>
+                <h3 class="section-title">Centro de Operações de Produtos</h3>
+                <div style="font-size: 0.8rem; color: var(--muted);">
+                    Ads Global: 
+                    <span class="badge {% if ads_system_mode == 'enabled' %}status-healthy{% else %}status-error{% endif %}">
+                        {{ ads_system_mode|upper }}
+                    </span>
+                </div>
             </div>
+            
             {% if products %}
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID do Produto</th>
-                        <th>Estado</th>
-                        <th>Versão</th>
-                        <th>Criado em</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for pd in products if pd is mapping %}
-                    <tr>
-                        <td>{{ pd.product_id }}</td>
-                        <td style="color:var(--accent);">{{ pd.state }}</td>
-                        <td>v{{ pd.baseline_version }}</td>
-                        <td>{{ (pd.created_at or "")[:10] }}</td>
-                    </tr>
+            <div class="product-grid">
+                {% for pd in products if pd is mapping %}
+                <div class="product-card" id="card-{{ pd.product_id }}">
+                    <div class="product-header">
+                        <div>
+                            <p class="product-title">{{ pd.product_name or 'Sem Nome' }}</p>
+                            <span class="badge badge-{{ pd.state|lower }}">{{ pd.state }}</span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                            <span style="font-size: 10px; color: var(--muted);">Ads Status</span>
+                            <label class="switch {% if ads_system_mode != 'enabled' %}disabled{% endif %}">
+                                <input type="checkbox" {% if pd.ads_enabled and ads_system_mode == 'enabled' %}checked{% endif %} 
+                                       {% if ads_system_mode != 'enabled' %}disabled{% endif %}
+                                       onchange="toggleAds('{{ pd.product_id }}', this.checked)">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="product-meta">
+                        <span>v{{ pd.baseline_version }}</span>
+                        <span>• Modo: <strong>{{ pd.traffic_mode|default(traffic_mode_global)|upper }}</strong></span>
+                        {% if pd.roas %}
+                        <span>• ROI: <strong style="color:var(--healthy);">{{ "%.2f"|format(pd.roas|float) }}</strong></span>
+                        {% endif %}
+                        <span>• Criado em: {{ pd.created_at[:10] if pd.created_at else '--' }}</span>
+                    </div>
+
+                    <!-- Visual Timeline [Step 2] -->
+                    {% set stages = ['radar_detected', 'opportunity_created', 'product_created', 'landing_generated', 'beta_started', 'test_running', 'scaled'] %}
+                    {% set current_stage_idx = 0 %}
+                    {% for s in stages %}
+                        {% if s == pd.product_stage %}
+                            {% set current_stage_idx = loop.index0 %}
+                        {% endif %}
                     {% endfor %}
-                </tbody>
-            </table>
+                    
+                    <div style="margin-top: 0.5rem;">
+                        <div class="timeline">
+                            {% for s in stages %}
+                            <div class="timeline-step {% if loop.index0 < current_stage_idx %}completed{% elif loop.index0 == current_stage_idx %}active{% endif %}"
+                                 title="{{ s|replace('_', ' ')|title }}"></div>
+                            {% endfor %}
+                        </div>
+                        <div class="timeline-labels">
+                            <span>Radar</span>
+                            <span>Prod</span>
+                            <span>Beta</span>
+                            <span>Scale</span>
+                        </div>
+                    </div>
+
+                    <div class="btn-group">
+                        <a href="/products/{{ pd.product_id }}" class="btn btn-sm btn-primary" target="_blank">Abrir</a>
+                        <button class="btn btn-sm" onclick="showHistory('{{ pd.product_id }}')">Histórico</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteProduct('{{ pd.product_id }}', '{{ pd.state }}')">Deletar</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
             {% else %}
             <div class="placeholder">Nenhum produto encontrado no armazenamento.</div>
+            {% endif %}
+        </section>
+
+        <!-- Product History Modal (Hidden by default) -->
+        <div id="history-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center;">
+            <div class="section" style="width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto;">
+                <div class="section-header">
+                    <h3 class="section-title">Histórico de Eventos</h3>
+                    <button onclick="document.getElementById('history-modal').style.display='none'">Fechar</button>
+                </div>
+                <div id="history-content"></div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- TRASH SECTION [Step 4] -->
+        {% if section == 'trash' %}
+        <section class="section">
+            <div class="section-header">
+                <h3 class="section-title">Lixeira (Retenção de 365 dias)</h3>
+            </div>
+            {% if trash_products %}
+            <div class="product-grid">
+                {% for pd in trash_products if pd is mapping %}
+                <div class="product-card" style="opacity: 0.7;">
+                    <div class="product-header">
+                        <p class="product-title">{{ pd.product_id[:8] }}...</p>
+                        <span class="badge" style="background:#4a5568;">DELETADO</span>
+                    </div>
+                    <div class="product-meta">
+                        <span>Deletado em: {{ (pd.deleted_at or "")[:10] }}</span>
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn-sm btn-primary" onclick="restoreProduct('{{ pd.product_id }}')">Restaurar</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="placeholder">A lixeira está vazia.</div>
             {% endif %}
         </section>
         {% endif %}
@@ -728,18 +972,33 @@
         </section>
         {% endif %}
 
-        <!-- SETTINGS SECTION -->
+        <!-- SETTINGS SECTION [Step 5] -->
         {% if section == 'settings' %}
         <section class="section">
             <div class="section-header">
                 <h3 class="section-title">Configurações do Sistema</h3>
             </div>
-            <form style="display:flex; flex-direction:column; gap:1rem; max-width:400px;">
+            <div class="grid">
+                <div class="card">
+                    <h4>Controle Global de Ads</h4>
+                    <p style="font-size:0.8rem; color:var(--muted);">Habilita ou desabilita todos os anúncios do sistema instantaneamente.</p>
+                    <div style="display:flex; align-items:center; gap:1rem; margin-top:1rem;">
+                        <label class="switch" style="width: 50px; height: 28px;">
+                            <input type="checkbox" id="global-ads-toggle" {% if ads_system_mode == 'enabled' %}checked{% endif %} 
+                                   onchange="toggleGlobalAds(this.checked)">
+                            <span class="slider" style="border-radius:28px;"></span>
+                        </label>
+                        <span id="global-ads-status" style="font-weight:bold; color: {% if ads_system_mode == 'enabled' %}var(--healthy){% else %}var(--error){% endif %};">
+                            {{ ads_system_mode|upper }}
+                        </span>
+                    </div>
+                </div>
+                
                 <div class="card">
                     <h4>Modo Autônomo</h4>
                     <p style="font-size:0.8rem; color:var(--muted);">Nível de execução autônoma global.</p>
                     <select
-                        style="background:#0f1117; color:white; border:1px solid var(--border); padding:0.5rem; width:100%;">
+                        style="background:#0f1117; color:white; border:1px solid var(--border); padding:0.5rem; width:100%; margin-top:0.5rem;">
                         <option>Totalmente Autônomo (Padrão V2)</option>
                         <option>Humano no loop (Aguardando Configuração)</option>
                     </select>
@@ -748,13 +1007,108 @@
                     <h4>Limiar de Contenção Financeira</h4>
                     <p style="font-size:0.8rem; color:var(--muted);">Parada de emergência no saldo restante.</p>
                     <input type="text" value="${{ budget_data.financial_threshold if budget_data.financial_threshold else '50.00' }}"
-                        style="background:#0f1117; color:white; border:1px solid var(--border); padding:0.5rem; width:100%;">
+                        style="background:#0f1117; color:white; border:1px solid var(--border); padding:0.5rem; width:100%; margin-top:0.5rem;">
                 </div>
-            </form>
+            </div>
         </section>
         {% endif %}
 
     </div>
+    <script>
+        async function toggleAds(productId, enabled) {
+            console.log(`Toggling ads for ${productId}: ${enabled}`);
+            try {
+                const response = await fetch(`/dashboard/api/products/${productId}/toggle_ads`, {
+                    method: 'POST'
+                });
+                if (!response.ok) throw new Error('Falha ao atualizar Ads');
+                console.log('Ads updated successfully');
+            } catch (err) {
+                alert(err.message);
+                window.location.reload();
+            }
+        }
+
+        async function toggleGlobalAds(enabled) {
+            const statusLabel = document.getElementById('global-ads-status');
+            try {
+                const response = await fetch(`/dashboard/api/settings/toggle_global_ads`, {
+                    method: 'POST'
+                });
+                if (!response.ok) throw new Error('Falha ao atualizar Ads Global');
+                const data = await response.json();
+                statusLabel.innerText = data.new_mode.toUpperCase();
+                statusLabel.style.color = data.new_mode === 'enabled' ? 'var(--healthy)' : 'var(--error)';
+            } catch (err) {
+                alert(err.message);
+                window.location.reload();
+            }
+        }
+
+        function deleteProduct(productId, state) {
+            const activeStages = ['Beta', 'Ads_Beta', 'Ativo', 'Escalando', 'Escalado', 'test_running'];
+            let warning = "Tem certeza que deseja deletar este produto? Ele será movido para a lixeira por 365 dias.";
+            
+            if (activeStages.includes(state)) {
+                warning = "ALERTA DE SEGURANÇA: Este produto está ATIVO e pode estar gerando receita. Deletá-lo interromperá os ciclos de validação e tráfego. Deseja continuar?";
+            }
+
+            if (confirm(warning)) {
+                fetch(`/dashboard/api/products/${productId}/delete`, { method: 'POST' })
+                    .then(res => res.ok ? window.location.reload() : alert('Erro ao deletar'))
+                    .catch(err => alert(err));
+            }
+        }
+
+        function restoreProduct(productId) {
+            fetch(`/dashboard/api/products/${productId}/restore`, { method: 'POST' })
+                .then(res => res.ok ? window.location.reload() : alert('Erro ao restaurar'))
+                .catch(err => alert(err));
+        }
+
+        // Defensive check for productData
+        let productData = [];
+        try {
+            productData = {{ (products or [])|tojson|safe }};
+        } catch(e) {
+            console.warn("Could not parse products to JSON", e);
+        }
+
+        function showHistory(productId) {
+            const product = productData.find(p => p.product_id === productId);
+            if (!product || !product.product_events) {
+                alert("Sem histórico disponível para este produto.");
+                return;
+            }
+
+            const content = product.product_events.map(ev => `
+                <div style="display:flex; justify-content:space-between; padding: 8px 0; border-bottom: 1px solid #2d3748;">
+                    <span style="color:var(--accent); font-weight:bold;">${ev.stage.replace(/_/g, ' ').toUpperCase()}</span>
+                    <span style="color:var(--muted); font-size:0.8rem;">${(ev.timestamp || '').slice(11,19)}</span>
+                </div>
+            `).join('');
+
+            document.getElementById('history-content').innerHTML = content || '<p>Nenhum evento registrado.</p>';
+            document.getElementById('history-modal').style.display = 'flex';
+        }
+
+        const btnStartRadar = document.getElementById('btn-start-radar');
+        if (btnStartRadar) {
+            btnStartRadar.onclick = async () => {
+                if(!confirm("Iniciar varredura de Radar agora?")) return;
+                const res = await fetch('/dashboard/api/start_radar', { method: 'POST' });
+                if(res.ok) window.location.reload();
+            };
+        }
+
+        // Close modal on click outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('history-modal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
 </body>
 
 </html>
