@@ -794,27 +794,33 @@
             <div class="section-header">
                 <h3 class="section-title">Oportunidades Estratégicas (Filtro Radar)</h3>
             </div>
+
             {% if recommendations %}
-            <div class="grid">
-                {% for rec in recommendations %}
-                <div class="card" style="border-left: 4px solid var(--healthy);">
-                    <h4>{{ rec.product_id }}</h4>
-                    <div style="font-size: 0.9rem; margin: 0.5rem 0;">
-                        <strong>Score Final:</strong> {{ "%.2f"|format(rec.score_final|float) }} <br>
-                        <strong>ICE:</strong> <span class="status-badge status-healthy" style="display:inline-flex;">{{ rec.ice }}</span>
+                <div class="grid">
+                    {% for rec in recommendations %}
+                    <div class="card" style="border-left: 4px solid var(--healthy);">
+                        <h4>{{ rec.product_id }}</h4>
+                        <div style="font-size: 0.9rem; margin: 0.5rem 0;">
+                            <strong>Score Final:</strong> {{ "%.2f"|format(rec.score_final|float) }} <br>
+                            <strong>ICE:</strong> <span class="status-badge status-healthy" style="display:inline-flex;">{{ rec.ice }}</span>
+                        </div>
+                        <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 1rem;">{{ rec.strategy.central_hypothesis if rec.strategy else 'Sem estratégia definida.' }}</p>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-primary" onclick="alert('Funcionalidade em desenvolvimento: Validação para ' + '{{ rec.product_id }}')">Validar Mercado</button>
+                        </div>
                     </div>
-                    <p style="font-size: 0.8rem; color: var(--muted); margin-bottom: 1rem;">{{ rec.strategy.central_hypothesis }}</p>
-                    <div class="btn-group">
-                        <button class="btn btn-sm btn-primary" onclick="alert('Funcionalidade em desenvolvimento: Criação de rascunho para ' + '{{ rec.product_id }}')">Validar Mercado</button>
-                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
-            </div>
             {% else %}
-            <div class="card" style="text-align: center; padding: 40px; border: 1px dashed var(--muted); opacity: 0.8;">
-                <p style="font-size: 1.1rem; color: var(--muted); margin-bottom: 8px;">Nenhuma oportunidade detectada ainda.</p>
-                <p style="font-size: 0.9rem; color: var(--muted);">Execute o Radar para gerar novas avaliações de oportunidade.</p>
-            </div>
+                <div class="card" style="text-align: center; padding: 40px; border: 1px dashed var(--muted); opacity: 0.8;">
+                    {% if mode == 'MOCK' %}
+                        <p style="font-size: 1.1rem; color: var(--muted); margin-bottom: 8px;">Mock environment active.</p>
+                        <p style="font-size: 0.9rem; color: var(--muted);">No simulated opportunities available.</p>
+                    {% else %}
+                        <p style="font-size: 1.1rem; color: var(--muted); margin-bottom: 8px;">Nenhuma oportunidade detectada ainda.</p>
+                        <p style="font-size: 0.9rem; color: var(--muted);">Execute o Radar para gerar novas avaliações de oportunidade.</p>
+                    {% endif %}
+                </div>
             {% endif %}
         </section>
         {% endif %}
