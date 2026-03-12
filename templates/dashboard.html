@@ -786,6 +786,7 @@
             {% endif %}
         </section>
 
+        {% endif %}
 
         <!-- OPPORTUNITIES SECTION -->
         {% if section == 'opportunities' %}
@@ -810,11 +811,12 @@
                 {% endfor %}
             </div>
             {% else %}
-            <div class="placeholder">0 opportunities found — Run radar to discover new markets.</div>
+            <div class="card" style="text-align: center; padding: 40px; border: 1px dashed var(--muted); opacity: 0.8;">
+                <p style="font-size: 1.1rem; color: var(--muted); margin-bottom: 8px;">Nenhuma oportunidade detectada ainda.</p>
+                <p style="font-size: 0.9rem; color: var(--muted);">Execute o Radar para gerar novas avaliações de oportunidade.</p>
+            </div>
             {% endif %}
         </section>
-        {% endif %}
-
         {% endif %}
 
         <!-- RADAR SECTION -->

@@ -93,29 +93,7 @@ orchestrator_instance = bootstrap()
 from api.app import create_app
 app = create_app(orchestrator_instance)
 
-def start_git_sync_worker():
-    """Starts a background thread that periodically syncs local changes to GitHub."""
-    import threading
-    import time
-    from infrastructure.git_manager import automatic_sync
-    
-    def sync_loop():
-        logger.info("[Launcher] Auto-Git-Sync worker started.")
-        while True:
-            try:
-                automatic_sync()
-            except Exception as e:
-                logger.error(f"[Launcher] Git sync worker error: {e}")
-            # Wait 60 seconds between checks to avoid spamming
-            time.sleep(60)
-
-    sync_thread = threading.Thread(target=sync_loop, daemon=True)
-    sync_thread.start()
-
 if __name__ == "__main__":
-    # Start auto-deployment sync worker
-    start_git_sync_worker()
-    
     port = int(os.environ.get("PORT", 8080))
     logger.info(f"Launcher starting API on port {port}")
     app.run(host="0.0.0.0", port=port)
