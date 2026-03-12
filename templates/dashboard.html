@@ -857,7 +857,15 @@
                 </tbody>
             </table>
             {% else %}
-            <div class="placeholder">Nenhum dado de radar disponível no histórico.</div>
+            <div class="card" style="text-align: center; padding: 40px; border: 1px dashed var(--muted); opacity: 0.8;">
+                {% if mode == 'MOCK' %}
+                    <p style="font-size: 1.1rem; color: var(--muted); margin-bottom: 8px;">Mock environment active.</p>
+                    <p style="font-size: 0.9rem; color: var(--muted);">No simulated radar data available.</p>
+                {% else %}
+                    <p style="font-size: 1.1rem; color: var(--muted); margin-bottom: 8px;">Nenhum dado de radar disponível.</p>
+                    <p style="font-size: 0.9rem; color: var(--muted);">Inicie uma varredura para popular o histórico.</p>
+                {% endif %}
+            </div>
             {% endif %}
         </section>
         {% endif %}
@@ -937,7 +945,15 @@
                 {% endfor %}
             </div>
             {% else %}
-            <div class="placeholder">Nenhum produto encontrado no armazenamento.</div>
+            <div class="card" style="text-align: center; padding: 40px; border: 1px dashed var(--muted); opacity: 0.8;">
+                {% if mode == 'MOCK' %}
+                    <p style="font-size: 1.1rem; color: var(--muted); margin-bottom: 8px;">Mock environment active.</p>
+                    <p style="font-size: 0.9rem; color: var(--muted);">No simulated products available.</p>
+                {% else %}
+                    <p style="font-size: 1.1rem; color: var(--muted); margin-bottom: 8px;">Nenhum produto encontrado.</p>
+                    <p style="font-size: 0.9rem; color: var(--muted);">Produtos aparecerão aqui após a validação de oportunidades.</p>
+                {% endif %}
+            </div>
             {% endif %}
         </section>
 
@@ -977,7 +993,15 @@
                 {% endfor %}
             </div>
             {% else %}
-            <div class="placeholder">A lixeira está vazia.</div>
+            <div class="card" style="text-align: center; padding: 40px; border: 1px dashed var(--muted); opacity: 0.8;">
+                {% if mode == 'MOCK' %}
+                    <p style="font-size: 1.1rem; color: var(--muted); margin-bottom: 8px;">Mock environment active.</p>
+                    <p style="font-size: 0.9rem; color: var(--muted);">No simulated trash data available.</p>
+                {% else %}
+                    <p style="font-size: 1.1rem; color: var(--muted); margin-bottom: 8px;">A lixeira está vazia.</p>
+                    <p style="font-size: 0.9rem; color: var(--muted);">Produtos deletados serão mantidos aqui por 365 dias.</p>
+                {% endif %}
+            </div>
             {% endif %}
         </section>
         {% endif %}
@@ -1004,7 +1028,15 @@
                 </div>
             </div>
             {% else %}
-            <div class="placeholder">Aguardando conexão do motor — Análise ainda não conectada</div>
+            <div class="card" style="text-align: center; padding: 40px; border: 1px dashed var(--muted); opacity: 0.8;">
+                {% if mode == 'MOCK' %}
+                    <p style="font-size: 1.1rem; color: var(--muted); margin-bottom: 8px;">Mock environment active.</p>
+                    <p style="font-size: 0.9rem; color: var(--muted);">No simulated analytics available.</p>
+                {% else %}
+                    <p style="font-size: 1.1rem; color: var(--muted); margin-bottom: 8px;">Análise indisponível.</p>
+                    <p style="font-size: 0.9rem; color: var(--muted);">Aguardando conexão dos motores de performance.</p>
+                {% endif %}
+            </div>
             {% endif %}
         </section>
         {% endif %}
