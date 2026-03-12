@@ -16,7 +16,9 @@ logger = get_logger("DashboardAPI")
 dashboard_bp = Blueprint(
     "dashboard_routes", 
     __name__,
-    template_folder="../../templates"
+    template_folder="../../templates",
+    static_folder="../../static",
+    strict_slashes=False
 )
 
 @dashboard_bp.route("/login", methods=["GET", "POST"])

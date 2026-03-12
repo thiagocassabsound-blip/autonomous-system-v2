@@ -17,6 +17,7 @@ def create_app(orchestrator):
     Factory to create the Flask application with the injected orchestrator.
     """
     app = Flask(__name__)
+    app.url_map.strict_slashes = False
     
     # Enable session management for Dashboard Foundation
     app.secret_key = os.getenv("FLASK_SECRET_KEY", "autonomous_system_v2_fallback_secret")
