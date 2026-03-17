@@ -40,6 +40,7 @@ from engines.economic_engine import EconomicEngine
 from core.security_layer import SecurityLayer
 from core.feedback_incentive_engine import FeedbackIncentiveEngine
 
+
 logger = get_logger("MainApp")
 
 # Global pointers

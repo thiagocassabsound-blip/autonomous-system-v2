@@ -13,6 +13,11 @@ from infrastructure.logger import get_logger
 
 logger = get_logger("DashboardAPI")
 
+# Temporary in-memory persistence for governance as requested
+global_governance_state = {
+    "ads_global_enabled": True
+}
+
 dashboard_bp = Blueprint(
     "dashboard_routes", 
     __name__,
@@ -200,7 +205,7 @@ def _get_base_context(data):
         "error_alerts": error_alerts,
         "ads_system_mode": ads_system_mode,
         "traffic_mode_global": global_state.get("traffic_mode", "manual"),
-        "env_mode": os.getenv("ENV_MODE", "LOCAL").upper()
+        "env_mode": current_app.config.get("ENV_LABEL", "LOCAL")
     }
 
 
@@ -366,3 +371,36 @@ def toggle_global_ads():
     except Exception as e:
         logger.error(f"Error toggling global ads: {e}")
         return jsonify({"error": str(e)}), 500
+
+@dashboard_bp.route("/api/governance/ads-global", methods=["POST"])
+def governance_ads_global():
+    """Specific governance endpoint with in-memory persistence patch."""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "error": "missing payload"}), 400
+            
+        enabled = data.get("enabled")
+        if enabled is None:
+            return jsonify({"success": False, "error": "invalid payload"}), 400
+
+        # Update temporary in-memory state
+        global_governance_state["ads_global_enabled"] = enabled
+
+        # Sync with GlobalState engine if registered (best effort preservation)
+        gs = current_app.config.get('GLOBAL_STATE')
+        if gs:
+            try:
+                mode = "enabled" if enabled else "disabled"
+                gs.set_ads_system_mode(mode, orchestrated=True)
+                dashboard_state.refresh_cache(force=True)
+            except Exception as sync_err:
+                logger.warning(f"Engine sync failed (optional): {sync_err}")
+
+        return jsonify({
+            "success": True,
+            "ads_global_enabled": enabled
+        })
+    except Exception as e:
+        logger.error(f"Governance update failed: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500

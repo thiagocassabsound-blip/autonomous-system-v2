@@ -1101,15 +1101,25 @@
         async function toggleGlobalAds(enabled) {
             const statusLabel = document.getElementById('global-ads-status');
             try {
-                const response = await fetch(`/dashboard/api/settings/toggle_global_ads`, {
-                    method: 'POST'
+                const response = await fetch(`/api/governance/ads-global`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ enabled: enabled })
                 });
                 if (!response.ok) throw new Error('Falha ao atualizar Ads Global');
                 const data = await response.json();
-                statusLabel.innerText = data.new_mode.toUpperCase();
-                statusLabel.style.color = data.new_mode === 'enabled' ? 'var(--healthy)' : 'var(--error)';
+                if (data.success) {
+                    const newStatus = data.ads_global_enabled ? 'ENABLED' : 'DISABLED';
+                    statusLabel.innerText = newStatus;
+                    statusLabel.style.color = data.ads_global_enabled ? 'var(--healthy)' : 'var(--error)';
+                } else {
+                    throw new Error(data.error || 'Erro desconhecido');
+                }
             } catch (err) {
-                alert(err.message);
+                console.error("Governance update failed", err);
+                alert("Erro ao atualizar configuração: " + err.message);
                 window.location.reload();
             }
         }

@@ -15,6 +15,19 @@ from system.system_runner import start_system_runner
 # Load environment variables from .env
 load_dotenv()
 
+# --- APP_ENV FINAL FIX ---
+print("🔥 APP_ENV RAW:", os.getenv("APP_ENV"))
+APP_ENV = os.getenv("APP_ENV", "local")
+
+if APP_ENV == "production":
+    ENV_LABEL = "REDE"
+else:
+    ENV_LABEL = "LOCAL"
+
+print("🔥 ENVIRONMENT FINAL:", APP_ENV)
+print("🔥 ENV LABEL:", ENV_LABEL)
+# -------------------------
+
 from infrastructure.logger import get_logger
 
 # Log setup
@@ -92,6 +105,7 @@ orchestrator_instance = bootstrap()
 # Import the Flask app (will be created in api/app.py)
 from api.app import create_app
 app = create_app(orchestrator_instance)
+app.config["ENV_LABEL"] = ENV_LABEL
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
