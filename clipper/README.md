@@ -12,3 +12,8 @@ Requisitos: Python 3.10+, ffmpeg, `pip install numpy yt-dlp` (upload: `google-ap
 
 Todo corte leva "Source: <streamer>" na tela e Credit + link na descrição. Se um streamer pedir remoção, apague o corte.
 Upload: a API do YouTube só publica em público depois da auditoria do projeto; antes disso os vídeos ficam privados.
+
+## Automático (busca + download + candidatos)
+Preencha `channels.txt` com URLs de canais (ex.: `https://www.youtube.com/@NOME/videos`) e rode `python3 fetch.py`.
+Ele baixa os vídeos novos, roda o `find` e imprime os `candidates.json` prontos. Depois, no Claude Code aberto nesta pasta,
+peça: "escreva os ganchos de work/*/candidates.json e renderize".

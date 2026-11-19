@@ -1,0 +1,1 @@
+# um canal/playlist por linha (ex.: https://www.youtube.com/@NOME/videos)
