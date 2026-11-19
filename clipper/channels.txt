@@ -1,1 +1,5 @@
-# um canal/playlist por linha (ex.: https://www.youtube.com/@NOME/videos)
+# um canal/playlist por linha. Confira se cada link abre; remova os que não existirem.
+# O fetch.py só pega vídeos com "gta" no título e duração de 10 a 240 min.
+https://www.youtube.com/@IShowSpeed/videos
+https://www.youtube.com/@KaiCenat/videos
+https://www.youtube.com/@TheBurntPeanut/videos
