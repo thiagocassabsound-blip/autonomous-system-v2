@@ -7,7 +7,8 @@ Requisitos: Python 3.10+, ffmpeg, `pip install numpy yt-dlp` (upload: `google-ap
 2. Achar momentos:
    `python3 clipper.py find videos/ID.mp4 --credit "Nome do streamer" --source-url LINK --n 8`
 3. Mandar para o Claude `work/ID/candidates.json` + a pasta `frames/` (ele escreve os `hook` e `title`).
-4. Gerar os cortes: `python3 clipper.py render work/ID/candidates.json videos/ID.mp4`
+3b. (opcional, recomendado) Legendas: `pip install faster-whisper` e `python3 captions.py work/ID/candidates.json videos/ID.mp4`
+4. Gerar os cortes (queima as legendas se existirem): `python3 clipper.py render work/ID/candidates.json videos/ID.mp4`
 5. Postar (privado por padrão): `python3 upload.py work/ID/clips [--publish-at AAAA-MM-DDTHH:MM:SSZ]`
 
 Todo corte leva "Source: <streamer>" na tela e Credit + link na descrição. Se um streamer pedir remoção, apague o corte.

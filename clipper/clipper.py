@@ -7,7 +7,7 @@ Usage:
   python3 clipper.py render work/NAME/candidates.json VIDEO
 Needs ffmpeg + numpy. Every clip records source URL and credit in manifest.json.
 """
-import argparse, json, re, subprocess, sys, textwrap
+import argparse, json, os, re, subprocess, sys, textwrap
 from pathlib import Path
 import numpy as np
 
@@ -76,17 +76,20 @@ def render(a):
         hook = "\n".join(textwrap.wrap(c["hook"].upper(), 18))
         (out / f"h{c['id']}.txt").write_text(hook, encoding="utf-8")
         (out / f"c{c['id']}.txt").write_text(f"Source: {data['credit']}", encoding="utf-8")
-        fp = f"fontfile={FONT}:" if FONT else ""
+        fp = f"fontfile={FONT}:" if FONT and ":" not in FONT else ""   # drive letters break filter paths
+        srt = out / f"clip{c['id']:02d}.srt"
         vf = ("[0:v]split[a][b];[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=30[bg];"
               "[b]scale=1080:-2[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2[v];"
-              f"[v]drawtext={fp}textfile={out}/h{c['id']}.txt:fontsize=84:fontcolor=white:borderw=6:bordercolor=black:"
+              f"[v]drawtext={fp}textfile=h{c['id']}.txt:fontsize=84:fontcolor=white:borderw=6:bordercolor=black:"
               "line_spacing=12:x=(w-text_w)/2:y=170:enable='lt(t,4)',"
-              f"drawtext={fp}textfile={out}/c{c['id']}.txt:fontsize=34:fontcolor=white@0.9:borderw=3:bordercolor=black:"
-              "x=(w-text_w)/2:y=h-120[o]")
+              f"drawtext={fp}textfile=c{c['id']}.txt:fontsize=34:fontcolor=white@0.9:borderw=3:bordercolor=black:"
+              "x=(w-text_w)/2:y=h-120"
+              + (f",subtitles=clip{c['id']:02d}.srt:force_style='FontName=Arial,FontSize=16,Bold=1,Outline=3,"
+                 "Alignment=2,MarginV=60'" if srt.exists() else "") + "[o]")
         dst = out / f"clip{c['id']:02d}.mp4"
-        run(["ffmpeg", "-v", "error", "-y", "-ss", str(c["start"]), "-t", str(c["dur"]), "-i", a.video,
+        run(["ffmpeg", "-v", "error", "-y", "-ss", str(c["start"]), "-t", str(c["dur"]), "-i", os.path.abspath(a.video),
              "-filter_complex", vf, "-map", "[o]", "-map", "0:a?", "-c:v", "libx264", "-crf", "20", "-preset", "veryfast",
-             "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", str(dst)])
+             "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", dst.name], cwd=out)
         manifest.append({"file": dst.name, "title": c["title"] or c["hook"], "hook": c["hook"],
                          "credit": data["credit"], "source_url": data["source_url"],
                          "source_start": c["start"], "duration": c["dur"]})
