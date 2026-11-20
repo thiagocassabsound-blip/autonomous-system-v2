@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">
+<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a0536"/><stop offset=".55" stop-color="#7a1fa2"/><stop offset="1" stop-color="#ff3d7f"/></linearGradient>
+<linearGradient id="sun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe14d"/><stop offset=".5" stop-color="#ff9a3c"/><stop offset="1" stop-color="#ff2e88"/></linearGradient>
+<clipPath id="c"><circle cx="400" cy="400" r="400"/></clipPath>
+<clipPath id="sc"><circle cx="400" cy="360" r="190"/></clipPath>
+</defs>
+<g clip-path="url(#c)">
+<rect width="800" height="800" fill="url(#sky)"/>
+<circle cx="400" cy="360" r="190" fill="url(#sun)"/>
+<g clip-path="url(#sc)" fill="#7a1fa2"><rect y="400" width="800" height="10"/><rect y="440" width="800" height="16"/><rect y="485" width="800" height="22"/></g>
+<path d="M0 560 L0 800 L800 800 L800 560 Q600 520 400 560 Q200 600 0 560Z" fill="#12032a"/>
+<g stroke="#00e5ff" stroke-width="3" opacity=".8"><path d="M0 600H800M0 650H800M0 710H800M0 780H800"/><path d="M400 560L-100 800M400 560L100 800M400 560L300 800M400 560L500 800M400 560L700 800M400 560L900 800"/></g>
+<g fill="#12032a"><path d="M150 560 Q155 380 190 300 L205 305 Q175 390 170 560Z"/><path d="M190 300 Q120 290 70 340 Q135 305 195 318Z M190 300 Q230 230 300 230 Q235 260 200 310Z M190 300 Q150 240 90 235 Q160 255 192 308Z M190 300 Q270 300 310 350 Q250 315 195 316Z"/>
+<path d="M650 560 Q645 420 620 350 L636 346 Q662 420 668 560Z"/><path d="M628 348 Q690 330 735 375 Q680 345 630 360Z M628 348 Q590 290 530 292 Q590 308 626 360Z M628 348 Q690 300 745 300 Q690 320 630 360Z"/></g>
+<text x="400" y="700" text-anchor="middle" font-family="FreeSans, Arial, sans-serif" font-weight="900" font-style="italic" font-size="120" fill="#fff" stroke="#ff2e88" stroke-width="6" paint-order="stroke" transform="skewX(-8) translate(60 0)">CC</text>
+</g>
+<circle cx="400" cy="400" r="392" fill="none" stroke="#00e5ff" stroke-width="10"/>
+</svg>

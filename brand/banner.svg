@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2560" height="1440" viewBox="0 0 2560 1440">
+<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14042b"/><stop offset=".6" stop-color="#6d1a9a"/><stop offset="1" stop-color="#ff3d7f"/></linearGradient>
+<linearGradient id="sun" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe14d"/><stop offset=".5" stop-color="#ff9a3c"/><stop offset="1" stop-color="#ff2e88"/></linearGradient>
+<clipPath id="sc"><circle cx="1280" cy="640" r="330"/></clipPath>
+</defs>
+<rect width="2560" height="1440" fill="url(#sky)"/>
+<circle cx="1280" cy="640" r="330" fill="url(#sun)"/>
+<g clip-path="url(#sc)" fill="#6d1a9a"><rect y="700" width="2560" height="14"/><rect y="760" width="2560" height="22"/><rect y="830" width="2560" height="30"/></g>
+<path d="M0 900 L0 1440 L2560 1440 L2560 900 Q1900 860 1280 900 Q660 940 0 900Z" fill="#12032a"/>
+<g stroke="#00e5ff" stroke-width="3" opacity=".7"><path d="M0 960H2560M0 1030H2560M0 1120H2560M0 1240H2560M0 1390H2560"/><path d="M1280 900L-600 1440M1280 900L100 1440M1280 900L700 1440M1280 900L1280 1440M1280 900L1860 1440M1280 900L2460 1440M1280 900L3160 1440"/></g>
+<g fill="#12032a"><path d="M330 900 Q340 600 420 420 L445 428 Q375 610 365 900Z"/><path d="M420 420 Q280 400 180 500 Q300 430 425 445Z M420 420 Q500 290 640 300 Q510 345 435 440Z M420 420 Q340 320 220 320 Q350 345 418 438Z M420 420 Q580 430 660 530 Q540 460 430 440Z"/>
+<path d="M2230 900 Q2220 640 2160 500 L2185 492 Q2250 640 2262 900Z"/><path d="M2170 496 Q2300 460 2400 540 Q2290 485 2175 520Z M2170 496 Q2090 400 1960 405 Q2090 430 2165 520Z M2170 496 Q2290 400 2410 410 Q2290 440 2175 520Z"/></g>
+<g font-family="FreeSans, Arial, sans-serif" font-weight="900" font-style="italic" text-anchor="middle">
+<text x="1280" y="800" font-size="210" fill="#fff" stroke="#ff2e88" stroke-width="14" paint-order="stroke" transform="skewX(-8) translate(150 0)">CHAOS COAST</text>
+<text x="1280" y="900" font-size="58" fill="#00e5ff" letter-spacing="10" transform="skewX(-8) translate(150 0)">THE WILDEST GTA 6 MOMENTS · DAILY</text></g>
+</svg>
