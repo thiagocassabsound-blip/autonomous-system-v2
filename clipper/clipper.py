@@ -11,7 +11,8 @@ import argparse, json, os, re, subprocess, sys, textwrap
 from pathlib import Path
 import numpy as np
 
-FONT = next((p for p in ["/usr/share/fonts/truetype/freefont/FreeSansBold.ttf",
+BRAND_FONT = Path(__file__).resolve().parent.parent / "brand" / "fonts" / "Anton-Regular.ttf"
+FONT = str(BRAND_FONT) if BRAND_FONT.exists() else next((p for p in ["/usr/share/fonts/truetype/freefont/FreeSansBold.ttf",
                          "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
                          "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
                          "C:/Windows/Fonts/arialbd.ttf"] if Path(p).exists()), "")
@@ -73,18 +74,20 @@ def render(a):
     manifest = []
     for c in data["clips"]:
         if not c["hook"].strip(): continue
-        hook = "\n".join(textwrap.wrap(c["hook"].upper(), 18))
+        hook = "\n".join(textwrap.wrap(c["hook"].upper(), 16))
         (out / f"h{c['id']}.txt").write_text(hook, encoding="utf-8")
         (out / f"c{c['id']}.txt").write_text(f"Source: {data['credit']}", encoding="utf-8")
-        fp = f"fontfile={FONT}:" if FONT and ":" not in FONT else ""   # drive letters break filter paths
+        if FONT:
+            import shutil; shutil.copy(FONT, out / "font.ttf")      # relative name avoids Windows drive-letter issues
+        fp = "fontfile=font.ttf:" if FONT else ""
         srt = out / f"clip{c['id']:02d}.srt"
         vf = ("[0:v]split[a][b];[a]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=30[bg];"
               "[b]scale=1080:-2[fg];[bg][fg]overlay=(W-w)/2:(H-h)/2[v];"
-              f"[v]drawtext={fp}textfile=h{c['id']}.txt:fontsize=84:fontcolor=white:borderw=6:bordercolor=black:"
+              f"[v]drawtext={fp}textfile=h{c['id']}.txt:fontsize=110:fontcolor=white:borderw=8:bordercolor=0x14042b:"
               "line_spacing=12:x=(w-text_w)/2:y=170:enable='lt(t,4)',"
               f"drawtext={fp}textfile=c{c['id']}.txt:fontsize=34:fontcolor=white@0.9:borderw=3:bordercolor=black:"
               "x=(w-text_w)/2:y=h-120"
-              + (f",subtitles=clip{c['id']:02d}.srt:force_style='FontName=Arial,FontSize=16,Bold=1,Outline=3,"
+              + (f",subtitles=clip{c['id']:02d}.srt:fontsdir=.:force_style='FontName=Anton,FontSize=20,Outline=3,OutlineColour=&H2B0414&,"
                  "Alignment=2,MarginV=60'" if srt.exists() else "") + "[o]")
         dst = out / f"clip{c['id']:02d}.mp4"
         run(["ffmpeg", "-v", "error", "-y", "-ss", str(c["start"]), "-t", str(c["dur"]), "-i", os.path.abspath(a.video),
