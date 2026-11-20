@@ -79,3 +79,21 @@ YouTube dia 1: Windah Basudara, PAULINHO O LOKO, LOUD Coringa, TGG. Horas assist
 - Legenda: `force_style` usa escala 384x288; MarginV alto joga a legenda para fora da tela (ficou em 60).
 - Não colocar e-mail ou dados pessoais do usuário em serviços externos.
 - Agendado: lembrete (já disparado) sobre ativar o YouTube na skill `watch`. Skill instalada em `.claude/skills/watch`.
+
+---
+## 11. ADENDO (lacunas encontradas depois do primeiro handoff)
+
+**Estilo dos cortes, nas palavras do usuário (siga à risca):**
+- "Cortes rápidos que viralizem." Não é preciso grande ideia de roteiro: o trabalho é achar os pontos mais interessantes do gameplay e fazer o corte.
+- Em cada corte, escrever **poucas palavras na tela como gancho**, ligadas ao que acontece no vídeo, e só depois mostrar a cena. Exemplos do usuário (inspiração, não copiar): "a física do GTA está incrível", "os gráficos estão incríveis", "o cara tá tirando onda", "não acredito que fizeram isso no jogo".
+- Priorizar momentos **engraçados e inesperados** (física, bugs, reações, caos). Evitar cutscenes isoladas e spoilers de história.
+
+**Controle pelo celular:** o usuário quer falar com ESTA sessão pelo celular com o computador ligado e trabalhando. Para isso, ligar o interruptor **Remote Control** no painel da direita desta sessão e testar pelo app Claude (aba Code). O computador precisa ficar ligado, sem suspender, com o Claude Desktop aberto. Se isso ainda não estiver feito, **peça ao usuário que ligue e confirme**.
+
+**Achado do chat local:** o filtro de título "GTA 6/GTA VI" só passou vídeos do TheBurntPeanut. IShowSpeed e Kai Cenat não tiveram nenhum nos últimos 15 vídeos. Lives de GTA 6 costumam estar na aba **/streams** (ou ter título sem "GTA 6"). Teste também `https://www.youtube.com/@IShowSpeed/streams` e `@KaiCenat/streams`, e considere acrescentar outros canais em inglês que apareçam na pesquisa. Nenhum vídeo que não seja gameplay deve passar (ex.: vlogs).
+
+**Pendências de código:** commitar e dar push na mudança do filtro do `fetch.py`. Melhorar a quebra de linha do gancho no render (linhas muito separadas). Testar `captions.py` (primeira execução baixa o modelo Whisper).
+
+**Privacidade:** não colocar o e-mail pessoal do usuário no histórico git nem em serviços externos (o chat local já usa identidade genérica "Chaos Coast").
+
+**Organização:** o conteúdo está dentro do repositório `autonomous-system-v2` só por acidente; o plano é mover para repositório/pasta própria do Chaos Coast. O chat antigo (nuvem) será arquivado; este é o chat oficial do projeto.
