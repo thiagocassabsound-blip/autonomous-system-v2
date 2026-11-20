@@ -14,7 +14,7 @@ Path("videos").mkdir(exist_ok=True)
 for ch in [l.strip() for l in open("channels.txt") if l.strip() and not l.startswith("#")]:
     flt = f"duration>{a.min_minutes*60} & duration<{a.max_minutes*60} & title~=(?i)gta"
     r = subprocess.run(["yt-dlp", "--flat-playlist", "--playlist-end", "15", "--match-filter", flt,
-                        "--print", "%(id)s\t%(uploader)s\t%(webpage_url)s", ch], capture_output=True, text=True)
+                        "--print", "%(id)s\t%(playlist_uploader)s\t%(webpage_url)s", ch], capture_output=True, text=True)
     new = [l.split("\t") for l in r.stdout.splitlines() if l.split("\t")[0] not in seen][: a.per_channel]
     for vid, who, url in new:
         f = f"videos/{vid}.mp4"
